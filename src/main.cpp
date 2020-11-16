@@ -13,12 +13,14 @@ class TuringMachine {
     long int currTapeIdx = 0L;
 
     vector<char> m_configurations;
-    char curr_m_configuration;
+    int curMConfigIdx;
 
     char rule_section_delim = "|";
     vector<string> rules;
 
     string getRule() {
+        string rulePrefix =  m_configurations[currMConfigIdx] + 
+            rule_section_delim + tape[currTapeIdx]; 
     }
 
     void parseAndExecuteRule(string rule) {
