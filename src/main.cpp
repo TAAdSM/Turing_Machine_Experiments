@@ -30,14 +30,14 @@ class TuringMachine {
     long int currTapeIdx = 0L;
 
     vector<string> m_configurations;
-    int currMConfigIdx;
+    string currMConfig;
 
     char rule_section_delim = '|';
     char operation_section_delim = ',';
     vector<string> rules;
 
     string getRule() {
-        string rulePrefix =  m_configurations[currMConfigIdx] +
+        string rulePrefix =  currMConfig +
             rule_section_delim + tape[currTapeIdx];
         for (string rule: rules) {
             auto prefixResult = mismatch(rulePrefix.begin(), rulePrefix.end(), rule.begin());
@@ -50,8 +50,8 @@ class TuringMachine {
 
     void parseAndExecuteRule(string rule) {
         vector<string> ruleParts = splitString(rule, rule_section_delim);
-        string mConfig = ruleParts[0];
-        string symbol = ruleParts[1];
+        // string mConfig = ruleParts[0];
+        // string symbol = ruleParts[1];
         vector<string> operations = splitString(ruleParts[2], operation_section_delim);
         string newMConfig = ruleParts[3];
 
@@ -70,6 +70,8 @@ class TuringMachine {
                 }
             }
         }
+
+        currMConfig = newMConfig;
     }
     
     void performExecutionCycle() {
