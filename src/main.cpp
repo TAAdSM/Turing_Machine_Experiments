@@ -1,3 +1,6 @@
+#include <iostream>
+#include <vector>
+
 using namespace std;
 
 class TuringMachine {
@@ -6,25 +9,43 @@ class TuringMachine {
     char OPERATOR_RIGHT = "R";
     char OPERATOR_LEFT = "L";
 
-    long int tape_size;
-    char tape[];
+    vector<char> tape;
     long int currTapeIdx = 0L;
 
-    long int num_m_configurations = 3L;
-    char m_configurations[num_m_configurations];
+    vector<char> m_configurations;
     char curr_m_configuration;
 
     char rule_section_delim = "|";
-    long int num_rules;
-    string rules[];
+    vector<string> rules;
+
+    string getRule() {
+    }
+
+    void parseAndExecuteRule(string rule) {
+    }
     
     void performExecutionCycle() {
         string currRule = this.getRule();
         this.parseAndExecuteRule(currRule);    
     }
+
     public:
+        TuringMachine(vector<char>, vector<char>, vector<string>);
+        void run(int maxIterations) {
+            int numIterations = 0;
+            while (numIterations < maxIterations) {
+                performExecutionCycle();
+                numIterations++;
+            }
+        }
+}
 
-
+TuringMachine::TuringMachine (vector<char> new_tape, 
+                              vector<char> new_m_configs, 
+                              vector<string> new_rules) {
+    tape = new_tape;
+    m_configurations = new_m_configs;
+    rules = new_rules;
 }
 
 int main() {
