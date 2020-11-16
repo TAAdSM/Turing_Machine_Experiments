@@ -102,7 +102,9 @@ class TuringMachine {
 };
 
 int main() {
-    TuringMachine simpleTM(vector<string> {"0", "0", "0", "0", "0"},
+    vector<string> simpleTMInitialTape(20);
+    fill(simpleTMInitialTape.begin(), simpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
+    TuringMachine simpleTM(simpleTMInitialTape,
                            vector<string> {"A", "B", "C", "D"},
                            vector<string> {"A|NONE|P0,R|B",
                                                      "B|NONE|R|C",
