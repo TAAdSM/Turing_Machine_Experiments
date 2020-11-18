@@ -5,6 +5,7 @@
 
 static const char *const BLANK_TAPE_SYMBOL = "ε";
 static const char *const FINAL_TAPE_DELIMITER = "| ";
+static const char *const RULE_WILDCARD_SYMBOL = "ANY";
 
 using namespace std;
 
@@ -20,7 +21,6 @@ vector<string> splitString(string toSplit, char delim) {
 
 class TuringMachine {
     const char *const ruleNotFoundString = "RULE_NOT_FOUND";
-    const string NO_SYMBOL = "NONE";
     const char OPERATOR_PRINT = 'P';
     const char OPERATOR_ERASE = 'E';
     const char OPERATOR_RIGHT = 'R';
@@ -39,13 +39,22 @@ class TuringMachine {
     string getRule() {
         string rulePrefix =  currMConfig +
             rule_section_delim + tape[currTapeIdx];
+        string wildcardRulePrefix = currMConfig + rule_section_delim + RULE_WILDCARD_SYMBOL;
+        string exactMatchResult = "";
+        string wildcardMatchResult = "";
         for (string rule: rules) {
             auto prefixResult = mismatch(rulePrefix.begin(), rulePrefix.end(), rule.begin());
             if (prefixResult.first == rulePrefix.end()) {
-               return rule;
+                exactMatchResult = rule;
+                break;
+            }
+            auto prefixWildcardResult = mismatch(wildcardRulePrefix.begin(), wildcardRulePrefix.end(), rule.begin());
+            if (prefixWildcardResult.first == wildcardRulePrefix.end()) {
+                wildcardMatchResult = rule;
             }
         }
-        return ruleNotFoundString;
+        return !exactMatchResult.empty() ? exactMatchResult :
+            !wildcardMatchResult.empty() ? wildcardMatchResult : ruleNotFoundString;
     }
 
     void parseAndExecuteRule(string rule) {
@@ -72,6 +81,7 @@ class TuringMachine {
         }
 
         currMConfig = newMConfig;
+//        cout << "mConfig updated to " + currMConfig + "\n";
     }
     
     void performExecutionCycle() {
@@ -90,6 +100,7 @@ class TuringMachine {
             rules = new_rules;
         };
         void run(int maxIterations) {
+            currMConfig = m_configurations[0];
             int numIterations = 0;
             while (numIterations < maxIterations) {
                 performExecutionCycle();
@@ -106,9 +117,10 @@ int main() {
     fill(simpleTMInitialTape.begin(), simpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
     TuringMachine simpleTM(simpleTMInitialTape,
                            vector<string> {"A", "B", "C", "D"},
-                           vector<string> {"A|NONE|P0,R|B",
-                                                     "B|NONE|R|C",
-                                                     "C|NONE|P1,R|D",
-                                                     "D|NONE|R|B"});
+                           vector<string> {"A|ANY|P0,R|B",
+                                                     "B|ANY|R|C",
+                                                     "C|ANY|P1,R|D",
+                                                     "D|ANY|R|A"});
+    simpleTM.run(15);
     return 0;
 }
