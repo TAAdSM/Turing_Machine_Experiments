@@ -121,6 +121,16 @@ int main() {
                                                      "B|ANY|R|C",
                                                      "C|ANY|P1,R|D",
                                                      "D|ANY|R|A"});
-    simpleTM.run(15);
+    simpleTM.run(20);
+
+    vector<string> bigSimpleTMInitialTape(100);
+    fill(bigSimpleTMInitialTape.begin(), bigSimpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
+    TuringMachine bigSimpleTM(bigSimpleTMInitialTape,
+                           vector<string> {"A", "B", "C", "D"},
+                           vector<string> {"A|ANY|P0,R|B",
+                                           "B|ANY|R|C",
+                                           "C|ANY|P1,R|D",
+                                           "D|ANY|R|A"});
+    bigSimpleTM.run(100);
     return 0;
 }
