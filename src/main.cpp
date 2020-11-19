@@ -117,10 +117,10 @@ int main() {
     fill(simpleTMInitialTape.begin(), simpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
     TuringMachine simpleTM(simpleTMInitialTape,
                            vector<string> {"A", "B", "C", "D"},
-                           vector<string> {"A|ANY|P0,R|B",
-                                                     "B|ANY|R|C",
-                                                     "C|ANY|P1,R|D",
-                                                     "D|ANY|R|A"});
+                           vector<string> {"A|ε|P0,R|B",
+                                                     "B|ε|R|C",
+                                                     "C|ε|P1,R|D",
+                                                     "D|ε|R|A"});
     simpleTM.run(20);
 
     vector<string> simplifiedSimpleTMInitialTape(20);
@@ -134,10 +134,10 @@ int main() {
     fill(bigSimpleTMInitialTape.begin(), bigSimpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
     TuringMachine bigSimpleTM(bigSimpleTMInitialTape,
                            vector<string> {"A", "B", "C", "D"},
-                           vector<string> {"A|ANY|P0,R|B",
-                                           "B|ANY|R|C",
-                                           "C|ANY|P1,R|D",
-                                           "D|ANY|R|A"});
+                           vector<string> {"A|ε|P0,R|B",
+                                           "B|ε|R|C",
+                                           "C|ε|P1,R|D",
+                                           "D|ε|R|A"});
     bigSimpleTM.run(100);
 
     vector<string> singleOneTMInitialTape(20);
