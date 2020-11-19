@@ -132,5 +132,12 @@ int main() {
                                            "C|ANY|P1,R|D",
                                            "D|ANY|R|A"});
     bigSimpleTM.run(100);
+
+    vector<string> singleOneTMInitialTape(20);
+    fill(singleOneTMInitialTape.begin(), singleOneTMInitialTape.end(), BLANK_TAPE_SYMBOL);
+    TuringMachine singleOneTM(singleOneTMInitialTape,
+                              vector<string> {"B", "C", "D", "E", "F"},
+                              vector<string> {"B|ε|P0,R|C", "C|ε|R|D", "D|ε|P1,R|E", "E|ε|R|F", "F|ε|P0,R|E"});
+    singleOneTM.run(20);
     return 0;
 }
