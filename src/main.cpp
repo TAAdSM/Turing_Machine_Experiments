@@ -146,5 +146,25 @@ int main() {
                               vector<string> {"B", "C", "D", "E", "F"},
                               vector<string> {"B|ε|P0,R|C", "C|ε|R|D", "D|ε|P1,R|E", "E|ε|R|F", "F|ε|P0,R|E"});
     singleOneTM.run(20);
+
+
+    vector<string> transcendentalNumTMInitialTape(100);
+    fill(transcendentalNumTMInitialTape.begin(), transcendentalNumTMInitialTape.end(), BLANK_TAPE_SYMBOL);
+    TuringMachine transcendentalNumTM(transcendentalNumTMInitialTape,
+                                      vector<string> {"B", "O", "Q", "P", "F"},
+                                      vector<string> {"B|ε|Pə,R,Pə,R,P0,R,R,P0,L,L|O",
+                                                      "O|1|R,Px,L,L,L|O",
+                                                      "O|0||Q",
+                                                      "Q|1|R,R|Q",
+                                                      "Q|0|R,R|Q",
+                                                      "Q|ε|P1,L|P",
+                                                      "P|x|E,R|Q",
+                                                      "P|ə|R|F",
+                                                      "P|ε|L,L|P",
+                                                      "F|1|R,R|F",
+                                                      "F|0|R,R|F",
+                                                      "F|ε|P0,L,L|O"
+                                      });
+    transcendentalNumTM.run(100);
     return 0;
 }
