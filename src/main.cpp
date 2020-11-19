@@ -123,6 +123,13 @@ int main() {
                                                      "D|ANY|R|A"});
     simpleTM.run(20);
 
+    vector<string> simplifiedSimpleTMInitialTape(20);
+    fill(simplifiedSimpleTMInitialTape.begin(), simplifiedSimpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
+    TuringMachine simplifiedSimpleTM(simplifiedSimpleTMInitialTape,
+                                     vector<string> {"B"},
+                                     vector<string> {"B|ε|P0|B", "B|0|R,R,P1|B", "B|1|R,R,P0|B"});
+    simplifiedSimpleTM.run(20);
+
     vector<string> bigSimpleTMInitialTape(100);
     fill(bigSimpleTMInitialTape.begin(), bigSimpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
     TuringMachine bigSimpleTM(bigSimpleTMInitialTape,
