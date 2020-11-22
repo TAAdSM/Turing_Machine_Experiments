@@ -40,7 +40,8 @@ class TuringMachine {
 
     string getRule() {
         string ruleWithIdxPrefix = currMConfig + rule_section_delim +
-                                   tape[currTapeIdx] + "," + to_string(currTapeIdx);
+                                   tape[currTapeIdx] + "," +
+                                   to_string(currTapeIdx);
         string rulePrefix = currMConfig +
                             rule_section_delim + tape[currTapeIdx];
         string wildcardRulePrefix =
@@ -55,16 +56,26 @@ class TuringMachine {
             vector<string> ruleParts = splitString(rule, rule_section_delim);
             string mConfig = ruleParts[0];
             string symbol = ruleParts[1];
-           auto prefixWithIdxResult = mismatch(ruleWithIdxPrefix.begin(), ruleWithIdxPrefix.end(),
+
+            string notOpSymbolPrefix;
+            handleNegatedSymbols(rule, mConfig, symbol, negateOpMatchResult,
+                                 notOpSymbolPrefix);
+
+            auto prefixWithIdxResult = mismatch(ruleWithIdxPrefix.begin(),
+                                                ruleWithIdxPrefix.end(),
                                                 rule.begin());
             if (prefixWithIdxResult.first == ruleWithIdxPrefix.end()) {
                 exactMatchWithIdxResult = rule;
                 break;
             }
+
             auto prefixResult = mismatch(rulePrefix.begin(), rulePrefix.end(),
                                          rule.begin());
-            if (prefixResult.first == rulePrefix.end() && symbol.find(",") ==
-                                                               string::npos) {
+            if (prefixResult.first == rulePrefix.end() && (symbol.find(",") ==
+                                                          string::npos &&
+                                                          symbol.find
+                                                          (notOpSymbolPrefix)
+                                                          == string::npos)) {
                 exactMatchResult = rule;
                 break;
             }
@@ -76,9 +87,40 @@ class TuringMachine {
             }
         }
         return !exactMatchWithIdxResult.empty() ? exactMatchWithIdxResult :
-                !exactMatchResult.empty() ? exactMatchResult :
-                !wildcardMatchResult.empty() ? wildcardMatchResult
+               !exactMatchResult.empty() ? exactMatchResult :
+               !negateOpMatchResult.empty() ? negateOpMatchResult :
+               !wildcardMatchResult.empty() ? wildcardMatchResult
                                             : ruleNotFoundString;
+    }
+
+    void handleNegatedSymbols(const string &rule, const string &mConfig,
+                         string &symbol,
+                         string &negateOpMatchResult,
+                         string &notOpSymbolPrefix) {
+        notOpSymbolPrefix= "NOT(";
+        auto notOpSymbolPrefixResult = mismatch(notOpSymbolPrefix.begin(),
+                                            notOpSymbolPrefix.end(),
+                                            symbol.begin());
+        if (currMConfig == mConfig && notOpSymbolPrefixResult.first ==
+                                      notOpSymbolPrefix.end()) {
+            string negatedSymbol = string(notOpSymbolPrefixResult.second,
+                                          symbol.end() - 1);
+            if (g_debug) {
+                cout << "The curently negated symbol(s) is/are: " <<
+                negatedSymbol + "\n";
+            }
+            vector<string> negatedSymbols = splitString(negatedSymbol, ',');
+            bool allSymbolsNegated = true;
+            for (string nSymbol : negatedSymbols) {
+               if (tape[currTapeIdx] == nSymbol) {
+                   allSymbolsNegated = false;
+                   break;
+               }
+            }
+            if (allSymbolsNegated) {
+                negateOpMatchResult = rule;
+            }
+        }
     }
 
     void parseAndExecuteRule(string rule) {
@@ -114,9 +156,9 @@ class TuringMachine {
                     currTapeIdx--;
                 }
             } else if (operation[0] != NOP_OPERATOR) {
-               if (g_debug) {
-                   cout << "Weird operator: " << operation[0] << "\n";
-               }
+                if (g_debug) {
+                    cout << "Weird operator: " << operation[0] << "\n";
+                }
             }
         }
 
@@ -129,8 +171,10 @@ class TuringMachine {
     }
 
     void performExecutionCycle() {
-        if (g_debug) { cout <<
-        "--------------------------------------------\n"; }
+        if (g_debug) {
+            cout <<
+                 "--------------------------------------------\n";
+        }
         string currRule = getRule();
         if (g_debug) {
             cout << "New cycle.\n";
