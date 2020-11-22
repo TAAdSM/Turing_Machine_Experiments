@@ -178,8 +178,10 @@ class TuringMachine {
         string currRule = getRule();
         if (g_debug) {
             cout << "New cycle.\n";
-            cout << "currRule is: " << currRule + "\n";
+            cout << "curr mConfig is: " << currMConfig << "\n";
             cout << "currTapeIdx: " << currTapeIdx << "\n";
+            cout << "currTapeSymbol is: " << tape[currTapeIdx] << "\n";
+            cout << "currRule is: " << currRule + "\n";
         }
         if (currRule != ruleNotFoundString) {
             parseAndExecuteRule(currRule);
@@ -350,7 +352,7 @@ int main() {
                          "found1stdigit|1|R,R,R|find2nddigit",
                          "find2nddigit|x|L|found2nddigit",
                          "find2nddigit|y|L|found2nddigit",
-                         "find2nddigit|none|R,R|find2nddigit",
+                         "find2nddigit|ε|R,R|find2nddigit",
                          "found2nddigit|0|R|addzero",
                          "found2nddigit|1|R|addone",
                          "found2nddigit|ε|R|addone",
@@ -376,13 +378,13 @@ int main() {
                          "printnewy|@|R|newdigitisone",
                          "printnewy|NOT(@)|Py,R|resetnewx",
                          "resetnewx|ε|R,Px|flagresultdigits",
-                         "resetnewx|else|R,R|resetnewx",
+                         "resetnewx|NOT(ε)|R,R|resetnewx",
                          "flagresultdigits|s|Pt,R,R|unflagresultdigits",
                          "flagresultdigits|v|Pw,R,R|unflagresultdigits",
                          "flagresultdigits|NOT(s,v)|R,R|flagresultdigits",
                          "unflagresultdigits|s|Pr,R,R|unflagresultdigits",
                          "unflagresultdigits|v|Pu,R,R|unflagresultdigits",
-                         "unflagresultdigits|NOT(s,v)|N|findigits",
+                         "unflagresultdigits|NOT(s,v)|N|finddigits",
                          "newdigitiszero|@|R|printzerodigit",
                          "newdigitiszero|NOT(@)|L|newdigitiszero",
                          "printzerodigit|0|R,E,R|printzerodigit",
@@ -396,6 +398,6 @@ int main() {
                          "cleanup|ε|N|new",
                          "cleanup|NOT(ε)|E,R,R|cleanup"
     });
-    squareRootTwoTM.run(56);
+    squareRootTwoTM.run(3000);
     return 0;
 }
