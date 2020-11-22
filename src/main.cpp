@@ -7,6 +7,7 @@ static const char *const BLANK_TAPE_SYMBOL = "ε";
 static const char *const FINAL_TAPE_DELIMITER = "| ";
 static const char *const RULE_WILDCARD_SYMBOL = "ANY";
 
+static const bool g_debug = false;
 using namespace std;
 
 vector<string> splitString(string toSplit, char delim) {
@@ -41,8 +42,25 @@ class TuringMachine {
             rule_section_delim + tape[currTapeIdx];
         string wildcardRulePrefix = currMConfig + rule_section_delim + RULE_WILDCARD_SYMBOL;
         string exactMatchResult = "";
+        string negateOpMatchResult = "";
         string wildcardMatchResult = "";
         for (string rule: rules) {
+            vector<string> ruleParts = splitString(rule, rule_section_delim);
+            string mConfig = ruleParts[0];
+            string symbol = ruleParts[1];
+            string notOpSymbolPrefix = "NOT(";
+            auto notOpSymbolPrefixResult = mismatch(notOpSymbolPrefix.begin(), notOpSymbolPrefix.end(), symbol.begin());
+            if (currMConfig == mConfig && notOpSymbolPrefixResult.first ==
+            notOpSymbolPrefix.end()) {
+                string negatedSymbol = string(notOpSymbolPrefixResult.second,
+                                              symbol.end()-1);
+                if (g_debug) { cout << "The currently negated symbol is: " << negatedSymbol
+                + "\n"; }
+                if (tape[currTapeIdx] != negatedSymbol) {
+                   negateOpMatchResult = rule;
+                }
+            }
+
             auto prefixResult = mismatch(rulePrefix.begin(), rulePrefix.end(), rule.begin());
             if (prefixResult.first == rulePrefix.end()) {
                 exactMatchResult = rule;
@@ -54,6 +72,7 @@ class TuringMachine {
             }
         }
         return !exactMatchResult.empty() ? exactMatchResult :
+            !negateOpMatchResult.empty() ? negateOpMatchResult :
             !wildcardMatchResult.empty() ? wildcardMatchResult : ruleNotFoundString;
     }
 
@@ -66,26 +85,36 @@ class TuringMachine {
 
         for (string operation : operations) {
             if (operation[0] == OPERATOR_PRINT) {
+                if (g_debug) { cout << "Printing: " << operation[1] << " at: " << currTapeIdx
+                << "\n"; }
                 tape[currTapeIdx] = operation[1];
             } else if (operation[0] == OPERATOR_ERASE) {
                 tape[currTapeIdx] = BLANK_TAPE_SYMBOL;
             } else if (operation[0] == OPERATOR_RIGHT) {
+                if (g_debug) { cout << "Going Right at: " << currTapeIdx <<
+                "\n"; }
                 if (currTapeIdx < tape.size()) {
                     currTapeIdx++;
                 }
             } else if (operation[0] == OPERATOR_LEFT) {
+                if (g_debug) { cout << "Going Left at: " << currTapeIdx <<
+                "\n"; }
                 if (currTapeIdx > 0) {
                     currTapeIdx--;
                 }
             }
         }
 
+        if (g_debug) { cout << "Changing mConfig: " << currMConfig << " -> "
+        << newMConfig
+        << "\n"; }
         currMConfig = newMConfig;
 //        cout << "mConfig updated to " + currMConfig + "\n";
     }
     
     void performExecutionCycle() {
         string currRule = getRule();
+        if (g_debug) { cout << "New cycle. currRule is: " << currRule + "\n"; }
         if (currRule != ruleNotFoundString) {
             parseAndExecuteRule(currRule);
         }
@@ -166,5 +195,23 @@ int main() {
                                                       "F|ε|P0,L,L|O"
                                       });
     transcendentalNumTM.run(100);
+
+    vector<string> successiveIntsTMInitialTape(20);
+    fill(successiveIntsTMInitialTape.begin(), successiveIntsTMInitialTape.end(), BLANK_TAPE_SYMBOL);
+    TuringMachine successiveIntsTM(successiveIntsTMInitialTape,
+                                   vector<string> {"BEGIN", "INCREMENT", "REWIND"},
+                                   vector<string> {"BEGIN|ε|P0|INCREMENT",
+                                                   "INCREMENT|0|P1|REWIND",
+                                                   "INCREMENT|1|P0,L|INCREMENT",
+                                                   "INCREMENT|ε|P1|REWIND",
+                                                   "REWIND|ε|L|INCREMENT",
+                                                   "REWIND|NOT(ε)|R|REWIND",
+    });
+    successiveIntsTM.run(5); // This one seems broken by design
+    // needs to handle currSymbol = 1 at idx 0 case correctly (currently
+    // an infinity loop printing 1 and then 0) and move one
+    // further to the right during a rewind, which will require
+    // a NOP on the empty character rewind case.
+
     return 0;
 }
