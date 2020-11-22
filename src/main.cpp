@@ -22,6 +22,7 @@ vector<string> splitString(string toSplit, char delim) {
 
 class TuringMachine {
     const char *const ruleNotFoundString = "RULE_NOT_FOUND";
+    const char NOP_OPERATOR = 'N';
     const char OPERATOR_PRINT = 'P';
     const char OPERATOR_ERASE = 'E';
     const char OPERATOR_RIGHT = 'R';
@@ -38,37 +39,32 @@ class TuringMachine {
     vector<string> rules;
 
     string getRule() {
+        string ruleWithIdxPrefix = currMConfig + rule_section_delim +
+                                   tape[currTapeIdx] + "," + to_string(currTapeIdx);
         string rulePrefix = currMConfig +
                             rule_section_delim + tape[currTapeIdx];
         string wildcardRulePrefix =
                 currMConfig + rule_section_delim + RULE_WILDCARD_SYMBOL;
+
+        string exactMatchWithIdxResult = "";
         string exactMatchResult = "";
         string negateOpMatchResult = "";
         string wildcardMatchResult = "";
+
         for (string rule: rules) {
             vector<string> ruleParts = splitString(rule, rule_section_delim);
             string mConfig = ruleParts[0];
             string symbol = ruleParts[1];
-            string notOpSymbolPrefix = "NOT(";
-            auto notOpSymbolPrefixResult = mismatch(notOpSymbolPrefix.begin(),
-                                                    notOpSymbolPrefix.end(),
-                                                    symbol.begin());
-            if (currMConfig == mConfig && notOpSymbolPrefixResult.first ==
-                                          notOpSymbolPrefix.end()) {
-                string negatedSymbol = string(notOpSymbolPrefixResult.second,
-                                              symbol.end() - 1);
-                if (g_debug) {
-                    cout << "The currently negated symbol is: " << negatedSymbol
-                                                                   + "\n";
-                }
-                if (tape[currTapeIdx] != negatedSymbol) {
-                    negateOpMatchResult = rule;
-                }
+           auto prefixWithIdxResult = mismatch(ruleWithIdxPrefix.begin(), ruleWithIdxPrefix.end(),
+                                                rule.begin());
+            if (prefixWithIdxResult.first == ruleWithIdxPrefix.end()) {
+                exactMatchWithIdxResult = rule;
+                break;
             }
-
             auto prefixResult = mismatch(rulePrefix.begin(), rulePrefix.end(),
                                          rule.begin());
-            if (prefixResult.first == rulePrefix.end()) {
+            if (prefixResult.first == rulePrefix.end() && symbol.find(",") ==
+                                                               string::npos) {
                 exactMatchResult = rule;
                 break;
             }
@@ -79,16 +75,14 @@ class TuringMachine {
                 wildcardMatchResult = rule;
             }
         }
-        return !exactMatchResult.empty() ? exactMatchResult :
-               !negateOpMatchResult.empty() ? negateOpMatchResult :
-               !wildcardMatchResult.empty() ? wildcardMatchResult
+        return !exactMatchWithIdxResult.empty() ? exactMatchWithIdxResult :
+                !exactMatchResult.empty() ? exactMatchResult :
+                !wildcardMatchResult.empty() ? wildcardMatchResult
                                             : ruleNotFoundString;
     }
 
     void parseAndExecuteRule(string rule) {
         vector<string> ruleParts = splitString(rule, rule_section_delim);
-        // string mConfig = ruleParts[0];
-        // string symbol = ruleParts[1];
         vector<string> operations = splitString(ruleParts[2],
                                                 operation_section_delim);
         string newMConfig = ruleParts[3];
@@ -119,6 +113,10 @@ class TuringMachine {
                 if (currTapeIdx > 0) {
                     currTapeIdx--;
                 }
+            } else if (operation[0] != NOP_OPERATOR) {
+               if (g_debug) {
+                   cout << "Weird operator: " << operation[0] << "\n";
+               }
             }
         }
 
@@ -128,12 +126,17 @@ class TuringMachine {
                  << "\n";
         }
         currMConfig = newMConfig;
-//        cout << "mConfig updated to " + currMConfig + "\n";
     }
 
     void performExecutionCycle() {
+        if (g_debug) { cout <<
+        "--------------------------------------------\n"; }
         string currRule = getRule();
-        if (g_debug) { cout << "New cycle. currRule is: " << currRule + "\n"; }
+        if (g_debug) {
+            cout << "New cycle.\n";
+            cout << "currRule is: " << currRule + "\n";
+            cout << "currTapeIdx: " << currTapeIdx << "\n";
+        }
         if (currRule != ruleNotFoundString) {
             parseAndExecuteRule(currRule);
         }
@@ -179,7 +182,8 @@ int main() {
          simplifiedSimpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
     TuringMachine simplifiedSimpleTM(simplifiedSimpleTMInitialTape,
                                      vector<string>{"B"},
-                                     vector<string>{"B|ε|P0|B", "B|0|R,R,P1|B",
+                                     vector<string>{"B|ε|P0|B",
+                                                    "B|0|R,R,P1|B",
                                                     "B|1|R,R,P0|B"});
     simplifiedSimpleTM.run(20);
 
@@ -199,8 +203,10 @@ int main() {
          BLANK_TAPE_SYMBOL);
     TuringMachine singleOneTM(singleOneTMInitialTape,
                               vector<string>{"B", "C", "D", "E", "F"},
-                              vector<string>{"B|ε|P0,R|C", "C|ε|R|D",
-                                             "D|ε|P1,R|E", "E|ε|R|F",
+                              vector<string>{"B|ε|P0,R|C",
+                                             "C|ε|R|D",
+                                             "D|ε|P1,R|E",
+                                             "E|ε|R|F",
                                              "F|ε|P0,R|E"});
     singleOneTM.run(20);
 
@@ -234,19 +240,16 @@ int main() {
                                                   "REWIND1"},
                                    vector<string>{"BEGIN|ε|P0|INCREMENT",
                                                   "INCREMENT|0|P1|REWIND1",
+                                                  "INCREMENT|1,0|N|REWIND2",
                                                   "INCREMENT|1|P0,L|INCREMENT",
-                                                  "INCREMENT|1,0|NOP|REWIND2",
                                                   "INCREMENT|ε|P1|REWIND1",
                                                   "REWIND1|ε|L|INCREMENT",
-                                                  "REWIND1|NOT(ε)|R|REWIND1",
-                                                  "REWIND2|ε|P0|INCREMENT",
-                                                  "REWIND2|NOT(ε)|R|REWIND2",
+                                                  "REWIND1|0|R|REWIND1",
+                                                  "REWIND1|1|R|REWIND1",
+                                                  "REWIND2|ε|P1|INCREMENT",
+                                                  "REWIND2|0|R|REWIND2",
+                                                  "REWIND2|1|R|REWIND2",
                                    });
-    successiveIntsTM.run(5); // This one seems broken by design
-    // needs to handle currSymbol = 1 at idx 0 case correctly (currently
-    // an infinity loop printing 1 and then 0) and move one
-    // further to the right during a rewind, which will require
-    // a NOP on the empty character rewind case.
-
+    successiveIntsTM.run(3100);
     return 0;
 }
