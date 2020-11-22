@@ -72,10 +72,10 @@ class TuringMachine {
             auto prefixResult = mismatch(rulePrefix.begin(), rulePrefix.end(),
                                          rule.begin());
             if (prefixResult.first == rulePrefix.end() && (symbol.find(",") ==
-                                                          string::npos &&
-                                                          symbol.find
-                                                          (notOpSymbolPrefix)
-                                                          == string::npos)) {
+                                                           string::npos &&
+                                                           symbol.find
+                                                                   (notOpSymbolPrefix)
+                                                           == string::npos)) {
                 exactMatchResult = rule;
                 break;
             }
@@ -94,28 +94,28 @@ class TuringMachine {
     }
 
     void handleNegatedSymbols(const string &rule, const string &mConfig,
-                         string &symbol,
-                         string &negateOpMatchResult,
-                         string &notOpSymbolPrefix) {
-        notOpSymbolPrefix= "NOT(";
+                              string &symbol,
+                              string &negateOpMatchResult,
+                              string &notOpSymbolPrefix) {
+        notOpSymbolPrefix = "NOT(";
         auto notOpSymbolPrefixResult = mismatch(notOpSymbolPrefix.begin(),
-                                            notOpSymbolPrefix.end(),
-                                            symbol.begin());
+                                                notOpSymbolPrefix.end(),
+                                                symbol.begin());
         if (currMConfig == mConfig && notOpSymbolPrefixResult.first ==
                                       notOpSymbolPrefix.end()) {
             string negatedSymbol = string(notOpSymbolPrefixResult.second,
                                           symbol.end() - 1);
             if (g_debug) {
                 cout << "The curently negated symbol(s) is/are: " <<
-                negatedSymbol + "\n";
+                     negatedSymbol + "\n";
             }
             vector<string> negatedSymbols = splitString(negatedSymbol, ',');
             bool allSymbolsNegated = true;
             for (string nSymbol : negatedSymbols) {
-               if (tape[currTapeIdx] == nSymbol) {
-                   allSymbolsNegated = false;
-                   break;
-               }
+                if (tape[currTapeIdx] == nSymbol) {
+                    allSymbolsNegated = false;
+                    break;
+                }
             }
             if (allSymbolsNegated) {
                 negateOpMatchResult = rule;
@@ -295,5 +295,130 @@ int main() {
                                                   "REWIND_ADDZERO|1|R|REWIND_ADDZERO",
                                    });
     successiveIntsTM.run(3100);
+
+    vector<string> squareRootTwoTMInitialTape(100);
+    fill(squareRootTwoTMInitialTape.begin(),
+         squareRootTwoTMInitialTape.end(), BLANK_TAPE_SYMBOL);
+    TuringMachine squareRootTwoTM(squareRootTwoTMInitialTape,
+                                  vector<string>{"begin", "new",
+                                                 "markdigits",
+                                                 "findx",
+                                                 "firstr",
+                                                 "lastr",
+                                                 "finddigits",
+                                                 "find1stdigit",
+                                                 "found1stdigit",
+                                                 "find2nddigit",
+                                                 "found2nddigit",
+                                                 "addzero",
+                                                 "addone",
+                                                 "carry",
+                                                 "add-finished",
+                                                 "eraseoldx",
+                                                 "printnewx",
+                                                 "eraseoldy",
+                                                 "printnewy",
+                                                 "resetnewx",
+                                                 "flagresultdigits",
+                                                 "unflagresultdigits",
+                                                 "newdigitiszero",
+                                                 "printzerodigit",
+                                                 "newdigitisone",
+                                                 "printonedigit",
+                                                 "cleanup"
+                                  },
+                                  vector<string>{"begin|ε|P@,R,P1|new",
+                                                 "new|@|R|markdigits",
+                                                 "new|NOT(@)|L|new",
+                                                 "markdigits|0|R,Px,R|markdigits",
+                                                 "markdigits|1|R,Px,R|markdigits",
+                                                 "markdigits|ε|R,Pz,R,R,Pr|findx",
+                                                 "findx|x|E|firstr",
+                                                 "findx|@|N|finddigits",
+                                                 "findx|NOT(@,x)|L,L|findx",
+                                                 "firstr|r|R,R|lastr",
+                                                 "firstr|NOT(r)|R,R|firstr",
+                                                 "lastr|r|R,R|lastr",
+                                                 "lastr|ε|Pr,R,R,Pr|findx",
+                                                 "finddigits|@|R,"
+                                                 "R|find1stdigit",
+                                                 "finddigits|NOT(@)|L,"
+                                                 "L|finddigits",
+                                                 "find1stdigit|x|L|found1stdigit",
+                                                 "find1stdigit|y|L|found1stdigit",
+                                                 "find1stdigit|z|L|found2nddigit",
+                                                 "find1stdigit|ε|R,"
+                                                 "R|find1stdigit",
+                                                 "found1stdigit|0|R|addzero",
+                                                 "found1stdigit|1|R,R,"
+                                                 "R|find2nddigit",
+                                                 "find2nddigit|x|L|found2nddigit",
+                                                 "find2nddigit|y|L|found2nddigit",
+                                                 "find2nddigit|none|R,"
+                                                 "R|find2nddigit",
+                                                 "found2nddigit|0|R|addzero",
+                                                 "found2nddigit|1|R|addone",
+                                                 "found2nddigit|ε|R|addone",
+                                                 "addzero|r|Ps|addfinished",
+                                                 "addzero|u|Pv|addfinished",
+                                                 "addzero|NOT(r,u)|R,R|addzero",
+                                                 "addone|r|Pv|addfinished",
+                                                 "addone|u|Ps,R,R|carry",
+                                                 "addone|NOT(r,u)|R,R|addone",
+                                                 "carry|r|Pu|addfinished",
+                                                 "carry|ε|Pu|newdigitiszero",
+                                                 "carry|u|Pr,R,R|carry",
+                                                 "addfinished|@|R,R|eraseoldx",
+                                                 "addfinished|NOT(@)|L,"
+                                                 "L|addfinished",
+                                                 "eraseoldx|x|E,L,L|printnewx",
+                                                 "eraseoldx|z|Py,L,L|printnewx",
+                                                 "eraseoldx|NOT(x,z)|R,"
+                                                 "R|eraseoldx",
+                                                 "printnewx|@|R,R|eraseoldy",
+                                                 "printnewx|y|Pz|finddigits",
+                                                 "printnewx|ε|Px|finddigits",
+                                                 "eraseoldy|y|E,L,L|printnewy",
+                                                 "eraseoldy|NOT(y)|R,"
+                                                 "R|eraseoldy",
+                                                 "printnewy|@|R|newdigitisone",
+                                                 "printnewy|NOT(@)|Py,"
+                                                 "R|resetnewx",
+                                                 "resetnewx|ε|R,"
+                                                 "Px|flagresultdigits",
+                                                 "resetnewx|else|R,R|resetnewx",
+                                                 "flagresultdigits|s|Pt,R,"
+                                                 "R|unflagresultdigits",
+                                                 "flagresultdigits|v|Pw,R,"
+                                                 "R|unflagresultdigits",
+                                                 "flagresultdigits|NOT(s,v)"
+                                                 "|R,R|flagresultdigits",
+                                                 "unflagresultdigits|s|Pr,R,"
+                                                 "R|unflagresultdigits",
+                                                 "unflagresultdigits|v|Pu,R,R|unflagresultdigits",
+                                                 "unflagresultdigits|NOT(s,v)"
+                                                 "|N|findigits",
+                                                 "newdigitiszero|@|R|printzerodigit",
+                                                 "newdigitiszero|NOT(@)"
+                                                 "|L|newdigitiszero",
+                                                 "printzerodigit|0|R,E,"
+                                                 "R|printzerodigit",
+                                                 "printzerodigit|1|R,E,"
+                                                 "R|printzerodigit",
+                                                 "printzerodigit|ε|P0,R,R,"
+                                                 "R|cleanup",
+                                                 "newdigitisone|@|R|printonedigit",
+                                                 "newdigitisone|NOT(@)"
+                                                 "|L|newdigitisone",
+                                                 "printonedigit|0|R,E,"
+                                                 "R|printonedigit",
+                                                 "printonedigit|1|R,E,"
+                                                 "R|printonedigit",
+                                                 "printonedigit|ε|P1,R,R,"
+                                                 "R|cleanup",
+                                                 "cleanup|ε|N|new",
+                                                 "cleanup|NOT(ε)|E,R,R|cleanup",
+                                  });
+    squareRootTwoTM.run(56);
     return 0;
 }
