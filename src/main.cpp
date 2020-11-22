@@ -237,18 +237,18 @@ int main() {
          BLANK_TAPE_SYMBOL);
     TuringMachine successiveIntsTM(successiveIntsTMInitialTape,
                                    vector<string>{"BEGIN", "INCREMENT",
-                                                  "REWIND1"},
+                                                  "REWIND", "REWIND_ADDZERO"},
                                    vector<string>{"BEGIN|ε|P0|INCREMENT",
-                                                  "INCREMENT|0|P1|REWIND1",
-                                                  "INCREMENT|1,0|N|REWIND2",
+                                                  "INCREMENT|0|P1|REWIND",
+                                                  "INCREMENT|1,0|N|REWIND_ADDZERO",
                                                   "INCREMENT|1|P0,L|INCREMENT",
-                                                  "INCREMENT|ε|P1|REWIND1",
-                                                  "REWIND1|ε|L|INCREMENT",
-                                                  "REWIND1|0|R|REWIND1",
-                                                  "REWIND1|1|R|REWIND1",
-                                                  "REWIND2|ε|P1|INCREMENT",
-                                                  "REWIND2|0|R|REWIND2",
-                                                  "REWIND2|1|R|REWIND2",
+                                                  "INCREMENT|ε|P1|REWIND",
+                                                  "REWIND|ε|L|INCREMENT",
+                                                  "REWIND|0|R|REWIND",
+                                                  "REWIND|1|R|REWIND",
+                                                  "REWIND_ADDZERO|ε|P1|INCREMENT",
+                                                  "REWIND_ADDZERO|0|R|REWIND_ADDZERO",
+                                                  "REWIND_ADDZERO|1|R|REWIND_ADDZERO",
                                    });
     successiveIntsTM.run(3100);
     return 0;
