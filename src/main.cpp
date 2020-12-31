@@ -2,6 +2,7 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <iterator>
 
 static const char *const BLANK_TAPE_SYMBOL = "ε";
 static const char *const FINAL_TAPE_DELIMITER = "| ";
@@ -212,6 +213,7 @@ public:
 };
 
 int main() {
+    cout << "simpleTM:\n";
     vector<string> simpleTMInitialTape(20);
     fill(simpleTMInitialTape.begin(), simpleTMInitialTape.end(),
          BLANK_TAPE_SYMBOL);
@@ -222,7 +224,9 @@ int main() {
                                           "C|ε|P1,R|D",
                                           "D|ε|R|A"});
     simpleTM.run(20);
+    cout << "-------------------------------------\n";
 
+    cout << "simplifiedSimpleTM:\n";
     vector<string> simplifiedSimpleTMInitialTape(20);
     fill(simplifiedSimpleTMInitialTape.begin(),
          simplifiedSimpleTMInitialTape.end(), BLANK_TAPE_SYMBOL);
@@ -231,8 +235,10 @@ int main() {
                                      vector<string>{"B|ε|P0|B",
                                                     "B|0|R,R,P1|B",
                                                     "B|1|R,R,P0|B"});
-    simplifiedSimpleTM.run(20);
+    simplifiedSimpleTM.run(10);
+    cout << "-------------------------------------\n";
 
+    cout << "bigSimpleTM:\n";
     vector<string> bigSimpleTMInitialTape(100);
     fill(bigSimpleTMInitialTape.begin(), bigSimpleTMInitialTape.end(),
          BLANK_TAPE_SYMBOL);
@@ -243,7 +249,9 @@ int main() {
                                              "C|ε|P1,R|D",
                                              "D|ε|R|A"});
     bigSimpleTM.run(100);
+    cout << "-------------------------------------\n";
 
+    cout << "singleOneTM:\n";
     vector<string> singleOneTMInitialTape(20);
     fill(singleOneTMInitialTape.begin(), singleOneTMInitialTape.end(),
          BLANK_TAPE_SYMBOL);
@@ -255,8 +263,10 @@ int main() {
                                              "E|ε|R|F",
                                              "F|ε|P0,R|E"});
     singleOneTM.run(20);
+    cout << "-------------------------------------\n";
 
 
+    cout << "transcendentalNumTM:\n";
     vector<string> transcendentalNumTMInitialTape(100);
     fill(transcendentalNumTMInitialTape.begin(),
          transcendentalNumTMInitialTape.end(), BLANK_TAPE_SYMBOL);
@@ -277,7 +287,9 @@ int main() {
                                               "F|ε|P0,L,L|O"
                                       });
     transcendentalNumTM.run(100);
+    cout << "-------------------------------------\n";
 
+    cout << "successiveIntsTM:\n";
     vector<string> successiveIntsTMInitialTape(20);
     fill(successiveIntsTMInitialTape.begin(), successiveIntsTMInitialTape.end(),
          BLANK_TAPE_SYMBOL);
@@ -297,7 +309,9 @@ int main() {
                                                   "REWIND_ADDZERO|1|R|REWIND_ADDZERO",
                                    });
     successiveIntsTM.run(3100);
+    cout << "-------------------------------------\n";
 
+    cout << "squareRootTwoTM:\n";
     vector<string> squareRootTwoTMInitialTape(100);
     fill(squareRootTwoTMInitialTape.begin(),
          squareRootTwoTMInitialTape.end(), BLANK_TAPE_SYMBOL);
@@ -399,5 +413,6 @@ int main() {
                          "cleanup|NOT(ε)|E,R,R|cleanup"
     });
     squareRootTwoTM.run(3000);
+    cout << "-------------------------------------\n";
     return 0;
 }
