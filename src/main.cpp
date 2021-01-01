@@ -414,5 +414,50 @@ int main() {
     });
     squareRootTwoTM.run(3000);
     cout << "-------------------------------------\n";
+
+    cout << "universalTM:\n";
+    vector<string> universalTMInitialTape(200);
+    fill(universalTMInitialTape.begin(), universalTMInitialTape.end(),
+         BLANK_TAPE_SYMBOL);
+    // TODO initialize with program contents
+    // (NOT WORKING YET)
+    TuringMachine universalTM(universalTMInitialTape,
+                           vector<string>{"f", "f1", "f2"},
+                           vector<string>{
+                                          // Find
+                                          "f(C,B,α)|ə|L|f1(C,B,α)",
+                                          "f(C,B,α)|NOT()|L|f(C,B,α)",
+                                          "f1(C,B,α)|α||C",
+                                          "f1(C,B,α)|ε|R|f2(C,B,α)",
+                                          "f1(C,B,α)|NOT(α)|R|f1(C,B,α)",
+                                          "f2(C,B,α)|α||C",
+                                          "f2(C,B,α)|ε|R|B",
+                                          "f2(C,B,α)|NOT(α)|R|f1(C,B,α)",
+                                          // Erase
+                                          "q|||e(q,b,x)",
+                                          "e(q,b,x)|||f(e1(q,b,x),b,x)",
+                                          "e1(q,b,x)||E|q",
+                                          // Print-at-left-end
+                                          // AKA print-at-leftmost F-square
+                                          // (Figure square)
+                                          "pe(C,B)|||f(pe1(C,B), C, ə)",
+                                          "pe1(C,B)|ANY|R,R|pe1(C,B)",
+                                          "pe1(C,B)|ə|PB|C",
+                                          // left/right and move after
+                                          // desired char
+                                          "l(C)||L|C",
+                                          "r(C)||R|C",
+                                          "fl(C,B,α)|||f(l(C),B,α)", // called f'
+                                          "fr(C,B,α)|||f(r(C),B,α)", // called
+                                          // f''
+                                          // Copy
+                                          "c(C,B,α)|||fl(c1(C),B,α)",
+                                          "c1(C)|β||pe(C,β)" // Here β=any
+                                          // scanned symbol.  Need to
+                                          // implement this.
+                                          });
+    universalTM.run(20);
+    cout << "-------------------------------------\n";
+
     return 0;
 }
