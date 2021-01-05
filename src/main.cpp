@@ -473,6 +473,12 @@ int main() {
 //         BLANK_TAPE_SYMBOL);
     // TODO initialize with program contents
     // (NOT WORKING YET)
+    // Observation: nesting mfunctions will result in a tree structure similar
+    // to the AST a compiler uses... not sure how to parse but at any rate ...
+    // current single-vector implementation is not completely correct
+    // Alternately I could just expand my mfunctions for the UTM
+    // Should be fine, unless the overall number of rules
+    // becomes gigantic. I will try tomorrow. Low energy at the moment.
 //    UniversalTuringMachine universalTM(universalTMInitialTape,
 //                                       vector<string>{"f", "f1", "f2"},
 //                                       vector<string>{
