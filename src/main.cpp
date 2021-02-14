@@ -218,6 +218,14 @@ public:
     }
 };
 
+class MConfig {
+    std::string name;
+    public:
+        MConfig(std::string new_name) {
+            name = new_name;
+        }
+};
+
 enum MfunctionVarType {
    MFunction,
    MConfig,
@@ -226,7 +234,58 @@ enum MfunctionVarType {
 
 class MFunctionVar {
     string value;
+    MFunction* mfunction = NULL;
+    MConfig* mconfig = NULL;
     MfunctionVarType type;
+};
+
+class MFunctionCase {
+   MConfig* initialMConfig;
+   std::string symbolConditional;
+   std::string operation;
+   MConfig* finalMConfig;
+};
+
+class MFunctionResult {
+    std::string operation;
+    MConfig* finalMConfig;
+    public:
+        MFunctionResult(std::string new_operation, MConfig* new_finalMConfig) {
+            operation = new_operation;
+            finalMConfig = new_finalMConfig;
+        }
+};
+
+class MFunction:MConfig {
+   vector<MFunctionVar> currVars;
+   vector<MFunctionCase> rules;
+    private:
+        MFunctionCase* getCase(vector<MFunctionVar> currVars,
+                               vector<MFunctionCase> rules,
+                               vector<std::string> tape,
+                               long int currTapeIdx) {
+            MFunctionCase currCase;
+            for (int i = 0; i < rules.size(); i++) {
+                currCase = rules.get(i);
+                if (currCase.matches(tape[currTapeIdx])) {
+                    return &currCase;
+                }
+            }
+            return NULL;
+        }
+    public:
+        MFunctionResult* evaluateFunction(vector<std::string> tape, long int currTapeIdx) {
+            MFunctionCase* case = getCase(currVars, rules, tape);
+            std::string operation = computeOperation(case->operation, tape, currTapeIdx);
+            return &MFunctionResult(operation, case->finalMConfig);
+        }
+        void setVars(vector<MFunctionVar> new_vars) {
+            currVars=new_vars;
+        }
+        MFunction(vector<MFunctionVar> new_vars, vector<MFunctionCase> new_rules) {
+           currVars = new_vars;
+           rules = new_rules;
+        }
 };
 
 class UniversalTuringMachine : TuringMachine {
