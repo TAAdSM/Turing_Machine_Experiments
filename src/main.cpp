@@ -234,55 +234,65 @@ enum MfunctionVarType {
 
 class MFunctionVar {
     string value;
-    MFunction* mfunction = NULL;
-    MConfig* mconfig = NULL;
+    class MFunction* mfunction = NULL;
+    class MConfig* mconfig = NULL;
     MfunctionVarType type;
 };
 
 class MFunctionCase {
-   MConfig* initialMConfig;
+   class MConfig* initialMConfig;
    string symbolConditional;
-   string operation;
-   MConfig* finalMConfig;
+
+public:
+    string operation;
+    class MConfig* finalMConfig;
+    bool matches(string symbol) {
+       return symbolConditional == symbol; // TODO: update this with real logic
+    }
+    MFunctionCase(class MConfig *initialMConfig, const string &symbolConditional,
+                  const string &operation, class MConfig *finalMConfig)
+            : initialMConfig(initialMConfig),
+              symbolConditional(symbolConditional), operation(operation),
+              finalMConfig(finalMConfig) {}
 };
 
 class MFunctionResult {
     string operation;
-    MConfig* finalMConfig;
+    class MConfig* finalMConfig;
     public:
-        MFunctionResult(string new_operation, MConfig* new_finalMConfig) {
+        MFunctionResult(string new_operation, class MConfig* new_finalMConfig) {
             operation = new_operation;
             finalMConfig = new_finalMConfig;
         }
 };
 
-class MFunction:MConfig {
+class MFunction : MConfig {
    vector<MFunctionVar> currVars;
    vector<MFunctionCase> rules;
     private:
         MFunctionCase* getCase(vector<MFunctionVar> currVars,
                                vector<MFunctionCase> rules,
-                               vector<string> tape,
-                               long int currTapeIdx) {
-            MFunctionCase currCase;
+                               string currTapeSymbol) {
+            MFunctionCase* currCase = NULL;
             for (int i = 0; i < rules.size(); i++) {
-                currCase = rules.get(i);
-                if (currCase.matches(tape[currTapeIdx])) {
-                    return &currCase;
+                currCase = &rules[i];
+                if (currCase->matches(currTapeSymbol)) {
+                    return currCase;
                 }
             }
-            return NULL;
+            return currCase;
         }
     public:
         MFunctionResult* evaluateFunction(vector<string> tape, long int currTapeIdx) {
-            MFunctionCase* case = getCase(currVars, rules, tape);
-            string operation = computeOperation(case->operation, tape, currTapeIdx);
-            return &MFunctionResult(operation, case->finalMConfig);
+            MFunctionCase* mFunctionCase = getCase(currVars, rules, tape[currTapeIdx]);
+            return new MFunctionResult(mFunctionCase->operation,
+                                       mFunctionCase->finalMConfig);
         }
         void setVars(vector<MFunctionVar> new_vars) {
             currVars=new_vars;
         }
-        MFunction(vector<MFunctionVar> new_vars, vector<MFunctionCase> new_rules) {
+        MFunction(string newName, vector<MFunctionVar> new_vars,
+                  vector<MFunctionCase> new_rules) : MConfig(newName) {
            currVars = new_vars;
            rules = new_rules;
         }
@@ -577,5 +587,8 @@ int main() {
 //    universalTM.run(20);
 //    cout << "-------------------------------------\n";
 
+// ============================================================================
+// MFUNCTION EXPERIMENTS
+// ============================================================================
     return 0;
 }
