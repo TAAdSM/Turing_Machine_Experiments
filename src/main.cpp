@@ -227,16 +227,9 @@ class MConfig {
 };
 
 enum MfunctionVarType {
-   MFunction,
-   MConfig,
-   Char
-};
-
-class MFunctionVar {
-    string value;
-    class MFunction* mfunction = NULL;
-    class MConfig* mconfig = NULL;
-    MfunctionVarType type;
+   var_enum_mFunction,
+   var_enum_mConfig,
+   var_enum_char
 };
 
 class MFunctionCase {
@@ -244,62 +237,67 @@ class MFunctionCase {
    string symbolConditional;
 
 public:
-    string operation;
-    class MConfig* finalMConfig;
+    vector<string>* operation;
+    MConfig* finalMConfig;
     bool matches(string symbol) {
        return symbolConditional == symbol; // TODO: update this with real logic
     }
-    MFunctionCase(class MConfig *initialMConfig, const string &symbolConditional,
-                  const string &operation, class MConfig *finalMConfig)
+    MFunctionCase(MConfig *initialMConfig, string symbolConditional,
+                  vector<string>* operation, MConfig *finalMConfig)
             : initialMConfig(initialMConfig),
               symbolConditional(symbolConditional), operation(operation),
               finalMConfig(finalMConfig) {}
 };
 
 class MFunctionResult {
-    string operation;
-    class MConfig* finalMConfig;
+    vector<string>* operation;
+    MConfig* finalMConfig;
     public:
-        MFunctionResult(string new_operation, class MConfig* new_finalMConfig) {
+        MFunctionResult(vector<string>* new_operation, MConfig*
+        new_finalMConfig) {
             operation = new_operation;
             finalMConfig = new_finalMConfig;
         }
 };
 
-class MFunction : MConfig {
-   vector<MFunctionVar> currVars;
-   vector<MFunctionCase> rules;
+class MFunction : public MConfig {
+    public:
+        class MFunctionVar {
+            string value;
+            MFunction* mfunction = NULL;
+            MConfig* mconfig = NULL;
+            MfunctionVarType type;
+        };
+        MFunctionResult* evaluateFunction(vector<string> tape, long int currTapeIdx) {
+            MFunctionCase* mFunctionCase = getCase(tape[currTapeIdx]);
+            return new MFunctionResult(mFunctionCase->operation,
+                                       mFunctionCase->finalMConfig);
+        }
+        void setVars(vector<MFunctionVar*>* new_vars) {
+            currVars=new_vars;
+        }
+        MFunction(string newName, vector<MFunctionVar*>* new_vars,
+                  vector<MFunctionCase*>* new_rules) : MConfig(newName) {
+            currVars = new_vars;
+            rules = new_rules;
+        }
     private:
-        MFunctionCase* getCase(vector<MFunctionVar> currVars,
-                               vector<MFunctionCase> rules,
-                               string currTapeSymbol) {
+        vector<MFunctionVar*>* currVars;
+        vector<MFunctionCase*>* rules;
+        MFunctionCase* getCase(string currTapeSymbol) {
             MFunctionCase* currCase = NULL;
-            for (int i = 0; i < rules.size(); i++) {
-                currCase = &rules[i];
+            for (int i = 0; i < rules->size(); i++) {
+                currCase = (*rules)[i];
                 if (currCase->matches(currTapeSymbol)) {
                     return currCase;
                 }
             }
             return currCase;
         }
-    public:
-        MFunctionResult* evaluateFunction(vector<string> tape, long int currTapeIdx) {
-            MFunctionCase* mFunctionCase = getCase(currVars, rules, tape[currTapeIdx]);
-            return new MFunctionResult(mFunctionCase->operation,
-                                       mFunctionCase->finalMConfig);
-        }
-        void setVars(vector<MFunctionVar> new_vars) {
-            currVars=new_vars;
-        }
-        MFunction(string newName, vector<MFunctionVar> new_vars,
-                  vector<MFunctionCase> new_rules) : MConfig(newName) {
-           currVars = new_vars;
-           rules = new_rules;
-        }
 };
 
-class UniversalTuringMachine : TuringMachine {
-    vector<MFunctionVar> currentMFunctionVars;
+class UniversalTuringMachine : public TuringMachine {
+    vector<MFunction::MFunctionVar> currentMFunctionVars;
 
     constexpr static const char *const PLACEHOLDER_FOR_ANY_AS_VAL = "β";
 
@@ -536,6 +534,19 @@ int main() {
     squareRootTwoTM.run(3000);
     cout << "-------------------------------------\n";
 
+// ============================================================================
+// MFUNCTION EXPERIMENTS
+// ============================================================================
+
+// pcal = 'Print Character As Last'
+vector<MFunctionCase*>* pcalCases = new vector<MFunctionCase*>();
+
+// Prints supplied char on the leftmost empty F-square
+MFunction* printCharAsLast = new MFunction("printCharAsLast", new
+    vector<MFunction::MFunctionVar*>(), pcalCases);
+pcalCases->push_back(new MFunctionCase(printCharAsLast, "0", new
+    vector<string> {"R", "E", "R"}, printCharAsLast));
+
 //    cout << "universalTM:\n";
 //    vector<string> universalTMInitialTape(200);
 //    fill(universalTMInitialTape.begin(), universalTMInitialTape.end(),
@@ -587,8 +598,5 @@ int main() {
 //    universalTM.run(20);
 //    cout << "-------------------------------------\n";
 
-// ============================================================================
-// MFUNCTION EXPERIMENTS
-// ============================================================================
     return 0;
 }
