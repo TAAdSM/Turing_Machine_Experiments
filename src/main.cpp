@@ -219,9 +219,9 @@ public:
 };
 
 class MConfig {
-    std::string name;
+    string name;
     public:
-        MConfig(std::string new_name) {
+        MConfig(string new_name) {
             name = new_name;
         }
 };
@@ -241,16 +241,16 @@ class MFunctionVar {
 
 class MFunctionCase {
    MConfig* initialMConfig;
-   std::string symbolConditional;
-   std::string operation;
+   string symbolConditional;
+   string operation;
    MConfig* finalMConfig;
 };
 
 class MFunctionResult {
-    std::string operation;
+    string operation;
     MConfig* finalMConfig;
     public:
-        MFunctionResult(std::string new_operation, MConfig* new_finalMConfig) {
+        MFunctionResult(string new_operation, MConfig* new_finalMConfig) {
             operation = new_operation;
             finalMConfig = new_finalMConfig;
         }
@@ -262,7 +262,7 @@ class MFunction:MConfig {
     private:
         MFunctionCase* getCase(vector<MFunctionVar> currVars,
                                vector<MFunctionCase> rules,
-                               vector<std::string> tape,
+                               vector<string> tape,
                                long int currTapeIdx) {
             MFunctionCase currCase;
             for (int i = 0; i < rules.size(); i++) {
@@ -274,9 +274,9 @@ class MFunction:MConfig {
             return NULL;
         }
     public:
-        MFunctionResult* evaluateFunction(vector<std::string> tape, long int currTapeIdx) {
+        MFunctionResult* evaluateFunction(vector<string> tape, long int currTapeIdx) {
             MFunctionCase* case = getCase(currVars, rules, tape);
-            std::string operation = computeOperation(case->operation, tape, currTapeIdx);
+            string operation = computeOperation(case->operation, tape, currTapeIdx);
             return &MFunctionResult(operation, case->finalMConfig);
         }
         void setVars(vector<MFunctionVar> new_vars) {
@@ -297,7 +297,7 @@ class UniversalTuringMachine : TuringMachine {
     }
 
     string applyMFunctionVarsToNewMConfig(string newMConfig) {
-        return std::string();
+        return string();
     }
 
     void parseAndExecuteRule(string rule) {
