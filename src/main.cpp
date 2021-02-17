@@ -9,7 +9,18 @@ static const char *const FINAL_TAPE_DELIMITER = "| ";
 static const char *const RULE_WILDCARD_SYMBOL = "ANY";
 
 static const bool g_debug = false;
+static const char OPERATION_SUBST_CHAR = '#';
 using namespace std;
+
+vector<int> findLocations(string string, char findIt)
+{
+    vector<int> characterLocations;
+    for(int i =0; i < string.size(); i++)
+        if(string[i] == findIt)
+            characterLocations.push_back(string[i]);
+
+    return characterLocations;
+}
 
 vector<string> splitString(string toSplit, char delim) {
     stringstream sstream(toSplit);
@@ -104,7 +115,7 @@ class TuringMachine {
             string negatedSymbol = string(notOpSymbolPrefixResult.second,
                                           symbol.end() - 1);
             if (g_debug) {
-                cout << "The curently negated symbol(s) is/are: " <<
+                cout << "The curently negated symbol(OPERATION_SUBST_CHAR) is/are: " <<
                      negatedSymbol + "\n";
             }
             vector<string> negatedSymbols = splitString(negatedSymbol, ',');
@@ -236,17 +247,17 @@ class MFunctionCase {
    class MConfig* initialMConfig;
    string symbolConditional;
 
-public:
-    vector<string>* operation;
-    MConfig* finalMConfig;
-    bool matches(string symbol) {
-       return symbolConditional == symbol; // TODO: update this with real logic
-    }
-    MFunctionCase(MConfig *initialMConfig, string symbolConditional,
-                  vector<string>* operation, MConfig *finalMConfig)
-            : initialMConfig(initialMConfig),
-              symbolConditional(symbolConditional), operation(operation),
-              finalMConfig(finalMConfig) {}
+    public:
+        vector<string>* operation;
+        MConfig* finalMConfig;
+        bool matches(string symbol) {
+           return symbolConditional == symbol; // TODO: update this with real logic
+        }
+        MFunctionCase(MConfig *initialMConfig, string symbolConditional,
+                      vector<string>* operation, MConfig *finalMConfig)
+                : initialMConfig(initialMConfig),
+                  symbolConditional(symbolConditional), operation(operation),
+                  finalMConfig(finalMConfig) {}
 };
 
 class MFunctionResult {
@@ -268,8 +279,22 @@ class MFunction : public MConfig {
             MConfig* mconfig = NULL;
             MfunctionVarType type;
         };
-        MFunctionResult* evaluateFunction(vector<string> tape, long int currTapeIdx) {
+
+    vector<string>* expandOperation(vector<string>* operations) {
+        for (int i =0; i < operations->size(); i++) {
+            vector<int> substLocations = findLocations((*operations)[i],
+                                                       OPERATION_SUBST_CHAR);
+            if (!substLocations.empty()) {
+
+            }
+        }
+        return operations;
+    }
+
+    MFunctionResult* evaluateFunction(vector<string> tape, long int currTapeIdx) {
             MFunctionCase* mFunctionCase = getCase(tape[currTapeIdx]);
+            vector<string>* expandedOperations = expandOperation
+                    (mFunctionCase->operation);
             return new MFunctionResult(mFunctionCase->operation,
                                        mFunctionCase->finalMConfig);
         }
@@ -512,12 +537,12 @@ int main() {
                          "printnewy|NOT(@)|Py,R|resetnewx",
                          "resetnewx|ε|R,Px|flagresultdigits",
                          "resetnewx|NOT(ε)|R,R|resetnewx",
-                         "flagresultdigits|s|Pt,R,R|unflagresultdigits",
+                         "flagresultdigits|OPERATION_SUBST_CHAR|Pt,R,R|unflagresultdigits",
                          "flagresultdigits|v|Pw,R,R|unflagresultdigits",
-                         "flagresultdigits|NOT(s,v)|R,R|flagresultdigits",
-                         "unflagresultdigits|s|Pr,R,R|unflagresultdigits",
+                         "flagresultdigits|NOT(OPERATION_SUBST_CHAR,v)|R,R|flagresultdigits",
+                         "unflagresultdigits|OPERATION_SUBST_CHAR|Pr,R,R|unflagresultdigits",
                          "unflagresultdigits|v|Pu,R,R|unflagresultdigits",
-                         "unflagresultdigits|NOT(s,v)|N|finddigits",
+                         "unflagresultdigits|NOT(OPERATION_SUBST_CHAR,v)|N|finddigits",
                          "newdigitiszero|@|R|printzerodigit",
                          "newdigitiszero|NOT(@)|L|newdigitiszero",
                          "printzerodigit|0|R,E,R|printzerodigit",
@@ -540,6 +565,10 @@ int main() {
 
 // pcal = 'Print Character As Last'
 vector<MFunctionCase*>* pcalCases = new vector<MFunctionCase*>();
+
+vector<string> pcalInitialTape(10);
+fill(pcalInitialTape.begin(),
+     pcalInitialTape.end(), BLANK_TAPE_SYMBOL);
 
 // Prints supplied char on the leftmost empty F-square
 MFunction* printCharAsLast = new MFunction("printCharAsLast", new
