@@ -4,13 +4,15 @@
 #include <iostream>
 #include <iterator>
 
-static const char *const BLANK_TAPE_SYMBOL = "ε";
-static const char *const FINAL_TAPE_DELIMITER = "| ";
-static const char *const RULE_WILDCARD_SYMBOL = "ANY";
+using namespace std;
+static string BLANK_TAPE_SYMBOL = "ε";
+static string FINAL_TAPE_DELIMITER = "| ";
+static string RULE_WILDCARD_SYMBOL = "ANY";
+static string PLACEHOLDER_FOR_ANY_AS_VAL = "β";
+static string SENTINEL_SCHWA = "ə";
 
 static const bool g_debug = false;
 static const char OPERATION_SUBST_CHAR = '#';
-using namespace std;
 
 vector<int> findLocations(string string, char findIt)
 {
@@ -244,20 +246,25 @@ enum MfunctionVarType {
 };
 
 class MFunctionCase {
-   class MConfig* initialMConfig;
+   string initialMConfig;
    string symbolConditional;
 
     public:
         vector<string>* operation;
-        MConfig* finalMConfig;
-        bool matches(string symbol) {
-           return symbolConditional == symbol; // TODO: update this with real logic
+        string finalMConfig;
+
+    MFunctionCase(string initialMConfig, string symbolConditional,
+                  vector<string> operation, string finalMConfig)
+            : initialMConfig(initialMConfig),
+              symbolConditional(symbolConditional), operation(operation),
+              finalMConfig(finalMConfig) {}
+
+    bool matches(string symbol) {
+            if (symbol == RULE_WILDCARD_SYMBOL || symbol == PLACEHOLDER_FOR_ANY_AS_VAL) {
+                return true;
+            }
+           return symbolConditional == symbol;
         }
-        MFunctionCase(MConfig *initialMConfig, string symbolConditional,
-                      vector<string>* operation, MConfig *finalMConfig)
-                : initialMConfig(initialMConfig),
-                  symbolConditional(symbolConditional), operation(operation),
-                  finalMConfig(finalMConfig) {}
 };
 
 class MFunctionResult {
@@ -324,7 +331,6 @@ class MFunction : public MConfig {
 class UniversalTuringMachine : public TuringMachine {
     vector<MFunction::MFunctionVar> currentMFunctionVars;
 
-    constexpr static const char *const PLACEHOLDER_FOR_ANY_AS_VAL = "β";
 
     void getRule() {
     }
@@ -562,6 +568,40 @@ int main() {
 // ============================================================================
 // MFUNCTION EXPERIMENTS
 // ============================================================================
+
+// f - find
+vector<string> findInitialTape(10);
+fill(findInitialTape.begin(),
+     findInitialTape.end(), BLANK_TAPE_SYMBOL);
+findInitialTape[5] = "x";
+
+vector<MFunctionCase*>* findCases = new vector<MFunctionCase*>();
+findCases->push_back(new MFunctionCase("f(#1,#2,#3)", SENTINEL_SCHWA,
+                                       vector<string>{"L"}, "f1(#1,#2,#3)"));
+findCases->push_back(new MFunctionCase("f(#1,#2,#3)", "NOT(" + SENTINEL_SCHWA
++ ")",vector<string>{"L"}, "f(#1,#2,#3)"));
+
+vector<MFunctionCase*>* find1Cases = new vector<MFunctionCase*>();
+find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", "#3",
+                                        vector<string>{}, "#1"));
+find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", "NOT(#3)",
+                                        vector<string>{"R"}, "f1(#1,#2,#3)"));
+find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", BLANK_TAPE_SYMBOL,
+                                        vector<string>{"R"}, "f2(#1,#2,#3)"));
+
+vector<MFunctionCase*>* find2Cases = new vector<MFunctionCase*>();
+find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", "#3",
+                                        vector<string>{}, "#1"));
+find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", "NOT(#3)",
+                                        vector<string>{"R"}, "f1(#1,#2,#3)"));
+find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", BLANK_TAPE_SYMBOL,
+                                        vector<string>{"R"}, "#2"));
+
+MConfig* DID_FIND = new MConfig("DF");
+MConfig* DID_NOT_FIND = new MConfig("DNF");
+MFunction* f = new MFunction("f", new vector<MFunction::MFunctionVar*>(), findCases);
+MFunction* f1 = new MFunction("f1", new vector<MFunction::MFunctionVar*>(), find1Cases);
+MFunction* f2 = new MFunction("f2", new vector<MFunction::MFunctionVar*>(), find2Cases);
 
 // pcal = 'Print Character As Last'
 vector<MFunctionCase*>* pcalCases = new vector<MFunctionCase*>();
