@@ -7,6 +7,7 @@
 using namespace std;
 static string BLANK_TAPE_SYMBOL = "ε";
 static string FINAL_TAPE_DELIMITER = "| ";
+static const char *const FINAL_TAPE_DELIMITER_PTR = "| ";
 static string RULE_WILDCARD_SYMBOL = "ANY";
 static string PLACEHOLDER_FOR_ANY_AS_VAL = "β";
 static string SENTINEL_SCHWA = "ə";
@@ -226,7 +227,7 @@ public:
         }
         ostringstream implodedTape;
         copy(tape.begin(), tape.end(),
-             ostream_iterator<string>(implodedTape, FINAL_TAPE_DELIMITER));
+             ostream_iterator<string>(implodedTape, FINAL_TAPE_DELIMITER_PTR));
         cout << implodedTape.str() + "\n";
     }
 };
@@ -254,7 +255,7 @@ class MFunctionCase {
         string finalMConfig;
 
     MFunctionCase(string initialMConfig, string symbolConditional,
-                  vector<string> operation, string finalMConfig)
+                  vector<string>* operation, string finalMConfig)
             : initialMConfig(initialMConfig),
               symbolConditional(symbolConditional), operation(operation),
               finalMConfig(finalMConfig) {}
@@ -298,12 +299,18 @@ class MFunction : public MConfig {
         return operations;
     }
 
+    MConfig *getFinaMConfigFromName(string basicString) {
+        return nullptr;
+    }
+
     MFunctionResult* evaluateFunction(vector<string> tape, long int currTapeIdx) {
             MFunctionCase* mFunctionCase = getCase(tape[currTapeIdx]);
             vector<string>* expandedOperations = expandOperation
                     (mFunctionCase->operation);
+            MConfig* mconfig = getFinaMConfigFromName
+                    (mFunctionCase->finalMConfig);
             return new MFunctionResult(mFunctionCase->operation,
-                                       mFunctionCase->finalMConfig);
+                                       mconfig);
         }
         void setVars(vector<MFunctionVar*>* new_vars) {
             currVars=new_vars;
@@ -577,25 +584,29 @@ findInitialTape[5] = "x";
 
 vector<MFunctionCase*>* findCases = new vector<MFunctionCase*>();
 findCases->push_back(new MFunctionCase("f(#1,#2,#3)", SENTINEL_SCHWA,
-                                       vector<string>{"L"}, "f1(#1,#2,#3)"));
+                                       new vector<string>{"L"}, "f1(#1,#2,#3)"
+                                                                ""));
 findCases->push_back(new MFunctionCase("f(#1,#2,#3)", "NOT(" + SENTINEL_SCHWA
-+ ")",vector<string>{"L"}, "f(#1,#2,#3)"));
++ ")",new vector<string>{"L"}, "f(#1,#2,#3)"));
 
 vector<MFunctionCase*>* find1Cases = new vector<MFunctionCase*>();
 find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", "#3",
-                                        vector<string>{}, "#1"));
+                                        new vector<string>{}, "#1"));
 find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", "NOT(#3)",
-                                        vector<string>{"R"}, "f1(#1,#2,#3)"));
+                                        new vector<string>{"R"}, "f1(#1,#2,#3)"
+                                                                ""));
 find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", BLANK_TAPE_SYMBOL,
-                                        vector<string>{"R"}, "f2(#1,#2,#3)"));
+                                        new vector<string>{"R"}, "f2(#1,#2,#3)"
+                                                                ""));
 
 vector<MFunctionCase*>* find2Cases = new vector<MFunctionCase*>();
 find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", "#3",
-                                        vector<string>{}, "#1"));
+                                        new vector<string>{}, "#1"));
 find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", "NOT(#3)",
-                                        vector<string>{"R"}, "f1(#1,#2,#3)"));
+                                        new vector<string>{"R"}, "f1(#1,#2,#3)"
+                                                                ""));
 find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", BLANK_TAPE_SYMBOL,
-                                        vector<string>{"R"}, "#2"));
+                                        new vector<string>{"R"}, "#2"));
 
 MConfig* DID_FIND = new MConfig("DF");
 MConfig* DID_NOT_FIND = new MConfig("DNF");
@@ -611,10 +622,10 @@ fill(pcalInitialTape.begin(),
      pcalInitialTape.end(), BLANK_TAPE_SYMBOL);
 
 // Prints supplied char on the leftmost empty F-square
-MFunction* printCharAsLast = new MFunction("printCharAsLast", new
-    vector<MFunction::MFunctionVar*>(), pcalCases);
-pcalCases->push_back(new MFunctionCase(printCharAsLast, "0", new
-    vector<string> {"R", "E", "R"}, printCharAsLast));
+//MFunction* printCharAsLast = new MFunction("printCharAsLast", new
+//    vector<MFunction::MFunctionVar*>(), pcalCases);
+//pcalCases->push_back(new MFunctionCase(printCharAsLast, "0", new
+//    vector<string> {"R", "E", "R"}, printCharAsLast));
 
 //    cout << "universalTM:\n";
 //    vector<string> universalTMInitialTape(200);
