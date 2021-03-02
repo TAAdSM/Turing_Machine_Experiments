@@ -369,6 +369,12 @@ class UniversalTuringMachine : public TuringMachine {
                                TuringMachine(newTape, newMConfigs, newRules) {};
 };
 
+vector<string> customUTMExecute(vector<MFunction> functions, vector<string>
+        initialTape, int
+numExecutionCycles) {
+    return initialTape; // DUMMY, NEED TO CODE THIS OUT TOMORROW
+}
+
 int main() {
     cout << "simpleTM:\n";
     vector<string> simpleTMInitialTape(20);
@@ -613,6 +619,8 @@ MConfig* DID_NOT_FIND = new MConfig("DNF");
 MFunction* f = new MFunction("f", new vector<MFunction::MFunctionVar*>(), findCases);
 MFunction* f1 = new MFunction("f1", new vector<MFunction::MFunctionVar*>(), find1Cases);
 MFunction* f2 = new MFunction("f2", new vector<MFunction::MFunctionVar*>(), find2Cases);
+vector<string> finalTape = customUTMExecute(new vector<MFunction>{f, f1, f2},
+                              findInitialTape, 10);
 
 // pcal = 'Print Character As Last'
 vector<MFunctionCase*>* pcalCases = new vector<MFunctionCase*>();
