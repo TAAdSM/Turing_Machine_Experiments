@@ -20,6 +20,6 @@ the ccmake ncurses-based GUI for cmake.
  
 FWIW I ran this on an x86-64 machine running an ubuntu-based distro, hope 
 that helps.
-## Side note: a PDF of the original 1936 Turing Paper PDF is included in this repo 
+## Side note: a PDF of the original 1936 Turing Paper is included in this repo 
 (For that tiny subset of people who cannot be bothered to search for it, I 
 suppose.)
