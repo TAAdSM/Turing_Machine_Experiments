@@ -12,8 +12,31 @@ static string RULE_WILDCARD_SYMBOL = "ANY";
 static string PLACEHOLDER_FOR_ANY_AS_VAL = "β";
 static string SENTINEL_SCHWA = "ə";
 
+static char SD_CHAR_SEMICOLON = ';';
+static char SD_CHAR_SYMBOL_C = 'C';
+static char SD_CHAR_MCONFIG_A = 'A';
+static char SD_CHAR_DELIM_D = 'D';
+static char SD_CHAR_OP_L = 'L';
+static char SD_CHAR_OP_R = 'R';
+static char SD_CHAR_OP_NO_MOVE = 'N';
+
+static char UTM_PRINTABLE_A = 'A';
+static char UTM_PRINTABLE_C = 'C';
+static char UTM_PRINTABLE_D = 'D';
+static char UTM_PRINTABLE_0 = '0';
+static char UTM_PRINTABLE_1 = '1';
+static char UTM_PRINTABLE_u = 'u';
+static char UTM_PRINTABLE_v = 'v';
+static char UTM_PRINTABLE_w = 'w';
+static char UTM_PRINTABLE_x = 'x';
+static char UTM_PRINTABLE_y = 'y';
+static char UTM_PRINTABLE_z = 'z';
+
 static const bool g_debug = false;
 static const char OPERATION_SUBST_CHAR = '#';
+char rule_section_delim = '|';
+char operation_section_delim = ',';
+string s_rule_section_delim= "|";
 
 vector<int> findLocations(string string, char findIt)
 {
@@ -170,9 +193,7 @@ class TuringMachine {
     }
 
 protected:
-    char rule_section_delim = '|';
-    char operation_section_delim = ',';
-    string currMConfig;
+   string currMConfig;
 
     void performOperations(vector<string> &operations) {
         for (string operation : operations) {
@@ -238,6 +259,9 @@ class MConfig {
         MConfig(string new_name) {
             name = new_name;
         }
+        string getName() {
+            return name;
+        }
 };
 
 enum MfunctionVarType {
@@ -246,134 +270,139 @@ enum MfunctionVarType {
    var_enum_char
 };
 
-class MFunctionCase {
-   string initialMConfig;
-   string symbolConditional;
-
-    public:
-        vector<string>* operation;
-        string finalMConfig;
-
-    MFunctionCase(string initialMConfig, string symbolConditional,
-                  vector<string>* operation, string finalMConfig)
-            : initialMConfig(initialMConfig),
-              symbolConditional(symbolConditional), operation(operation),
-              finalMConfig(finalMConfig) {}
-
-    bool matches(string symbol) {
-            if (symbol == RULE_WILDCARD_SYMBOL || symbol == PLACEHOLDER_FOR_ANY_AS_VAL) {
-                return true;
-            }
-           return symbolConditional == symbol;
-        }
+class MFunctionVar {
+    string value;
+    MfunctionVarType type;
 };
 
 class MFunctionResult {
-    vector<string>* operation;
-    MConfig* finalMConfig;
-    public:
-        MFunctionResult(vector<string>* new_operation, MConfig*
-        new_finalMConfig) {
-            operation = new_operation;
-            finalMConfig = new_finalMConfig;
-        }
+public:
+    MFunctionResult(vector<MFunctionVar*> *newVars, const string &name)
+            : vars(newVars), name(name) {}
+
+    vector<MFunctionVar*>* vars;
+    string name;
+public:
+
 };
 
 class MFunction : public MConfig {
-    public:
-        class MFunctionVar {
-            string value;
-            MFunction* mfunction = NULL;
-            MConfig* mconfig = NULL;
-            MfunctionVarType type;
-        };
+    vector<MFunctionVar*>* currVars{};
+    vector<string>* rules;
 
-    vector<string>* expandOperation(vector<string>* operations) {
-        for (int i =0; i < operations->size(); i++) {
-            vector<int> substLocations = findLocations((*operations)[i],
-                                                       OPERATION_SUBST_CHAR);
-            if (!substLocations.empty()) {
+public:
+    MFunction(const string &newName, vector<MFunctionVar *> *currVars,
+              vector<string> *rules) : MConfig(newName), currVars(currVars),
+                                       rules(rules) {}
 
-            }
-        }
-        return operations;
+    MFunction(const string &newName, vector<string> *rules) : MConfig(newName),
+                                                              rules(rules) {}
+
+    void setVars(vector<MFunctionVar*>* newVars) {
+        currVars = newVars;
     }
 
-    MConfig *getFinaMConfigFromName(string basicString) {
+    string reorderArgs(string basicString) {
+        return std::string();
+    }
+
+    vector<MFunctionVar *> *
+    reorderVars(string basicString, vector<MFunctionVar *> *pVector) {
         return nullptr;
     }
 
-    MFunctionResult* evaluateFunction(vector<string> tape, long int currTapeIdx) {
-            MFunctionCase* mFunctionCase = getCase(tape[currTapeIdx]);
-            vector<string>* expandedOperations = expandOperation
-                    (mFunctionCase->operation);
-            MConfig* mconfig = getFinaMConfigFromName
-                    (mFunctionCase->finalMConfig);
-            return new MFunctionResult(mFunctionCase->operation,
-                                       mconfig);
-        }
-        void setVars(vector<MFunctionVar*>* new_vars) {
-            currVars=new_vars;
-        }
-        MFunction(string newName, vector<MFunctionVar*>* new_vars,
-                  vector<MFunctionCase*>* new_rules) : MConfig(newName) {
-            currVars = new_vars;
-            rules = new_rules;
-        }
-    private:
-        vector<MFunctionVar*>* currVars;
-        vector<MFunctionCase*>* rules;
-        MFunctionCase* getCase(string currTapeSymbol) {
-            MFunctionCase* currCase = NULL;
-            for (int i = 0; i < rules->size(); i++) {
-                currCase = (*rules)[i];
-                if (currCase->matches(currTapeSymbol)) {
-                    return currCase;
-                }
-            }
-            return currCase;
-        }
-};
+    MFunctionResult* evaluateFunction(vector<string>* tape, int* currTapeIdx) {
 
-class UniversalTuringMachine : public TuringMachine {
-    vector<MFunction::MFunctionVar> currentMFunctionVars;
-
-
-    void getRule() {
-    }
-
-    string applyMFunctionVarsToNewMConfig(string newMConfig) {
-        return string();
-    }
-
-    void parseAndExecuteRule(string rule) {
-        vector<string> ruleParts = splitString(rule, rule_section_delim);
+        string foundRule = getRule((*tape)[*currTapeIdx]);
+        vector<string> ruleParts = splitString(foundRule, rule_section_delim);
         vector<string> operations = splitString(ruleParts[2],
                                                 operation_section_delim);
-        string newMConfig = ruleParts[3];
+        string newMConfigName = ruleParts[3];
+        vector<MFunctionVar*>* newVars = reorderVars(newMConfigName, currVars);
+        newMConfigName = reorderArgs(newMConfigName);
 
-        performOperations(operations);
+        vector<string> substituted_ops = substituteSymbols(operations);
+        performOps(substituted_ops, tape, currTapeIdx);
+        return new MFunctionResult(newVars, newMConfigName);
+    }
 
-        if (g_debug) {
-            cout << "Changing mConfig: " << currMConfig << " -> "
-                 << newMConfig
-                 << "\n";
+private:
+    bool caseMatches(string currCase, string currTapeSymbol) {
+        return false;
+    }
+
+    string getRule(string currTapeSymbol) {
+        string currCase;
+        for (int i = 0; i < rules->size(); i++) {
+            currCase = (*rules)[i];
+            if (caseMatches(currCase, currTapeSymbol)) {
+                return currCase;
+            }
         }
-        currMConfig = applyMFunctionVarsToNewMConfig(newMConfig);
+        return currCase;
+    }
+
+    vector<string> substituteSymbols(vector<string> operations) {
+        return vector<string>{};
+    }
+
+    void performOps(vector<string> ops, vector<string>* tape, int* tapeIdx) {
+
+    }
+
+};
+
+class TuringMachineWithFunctions {
+    MFunction DUMMY_MFUNCTION = MFunction("DUMMY", nullptr,
+                                          nullptr);
+    long int numIterationsRun = 0L;
+    vector<string>* tape;
+    int currTapeIdx = 0;
+    vector<MFunctionVar*>* currentMFunctionVars;
+    vector<MFunction*>* functionObjects;
+    vector<MConfig*>* mconfigs;
+    MFunction currFunction = DUMMY_MFUNCTION;
+
+    MFunction getFunctionByName(string basicString) {
+       for (MFunction* function : *functionObjects) {
+          if (function->getName() == basicString) {
+              return *function;
+          }
+       }
+       return DUMMY_MFUNCTION;
+    }
+
+    void performExecutionCycle() {
+        currFunction.setVars(currentMFunctionVars);
+        MFunctionResult* result = currFunction.evaluateFunction(tape,
+                                                                &currTapeIdx);
+        string newFunctionName = result->name;
+        currFunction = getFunctionByName(newFunctionName);
+        vector<MFunctionVar*>* newVars = result->vars;
     }
 
     public:
-        UniversalTuringMachine(vector<string> newTape,
-                               vector<string> newMConfigs,
-                               vector<string> newRules) :
-                               TuringMachine(newTape, newMConfigs, newRules) {};
-};
+        TuringMachineWithFunctions(vector<string>* newTape,
+                                   vector<MConfig*>* newMConfigs,
+                                   vector<MFunction*>* newMFunctions) {
+            tape = newTape;
+            mconfigs = newMConfigs;
+            functionObjects = newMFunctions;
+            currFunction = *((*functionObjects)[0]);
+        };
 
-vector<string> customUTMExecute(vector<MFunction> functions, vector<string>
-        initialTape, int
-numExecutionCycles) {
-    return initialTape; // DUMMY, NEED TO CODE THIS OUT TOMORROW
-}
+        void run(long int numIterations) {
+            while(numIterationsRun < numIterations) {
+                performExecutionCycle();
+                numIterationsRun++;
+            }
+            ostringstream implodedTape;
+            copy((*tape).begin(), (*tape).end(),
+                 ostream_iterator<string>(implodedTape,
+                                          FINAL_TAPE_DELIMITER_PTR));
+            cout << implodedTape.str() + "\n";
+        }
+};
 
 int main() {
     cout << "simpleTM:\n";
@@ -588,46 +617,60 @@ fill(findInitialTape.begin(),
      findInitialTape.end(), BLANK_TAPE_SYMBOL);
 findInitialTape[5] = "x";
 
-vector<MFunctionCase*>* findCases = new vector<MFunctionCase*>();
-findCases->push_back(new MFunctionCase("f(#1,#2,#3)", SENTINEL_SCHWA,
-                                       new vector<string>{"L"}, "f1(#1,#2,#3)"
-                                                                ""));
-findCases->push_back(new MFunctionCase("f(#1,#2,#3)", "NOT(" + SENTINEL_SCHWA
-+ ")",new vector<string>{"L"}, "f(#1,#2,#3)"));
+vector<string>* findRules = new vector<string>();
+findRules->push_back("f(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
+                     SENTINEL_SCHWA + s_rule_section_delim
+                     + "L" + s_rule_section_delim +
+                     "f1(#1_MC,#2_MC,#3_SYMB)");
+findRules->push_back("f(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim
+    + "NOT(" + SENTINEL_SCHWA + ")" + s_rule_section_delim
+    + "L" + s_rule_section_delim
+    + "f(#1_MC,#2_MC,#3)");
 
-vector<MFunctionCase*>* find1Cases = new vector<MFunctionCase*>();
-find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", "#3",
-                                        new vector<string>{}, "#1"));
-find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", "NOT(#3)",
-                                        new vector<string>{"R"}, "f1(#1,#2,#3)"
-                                                                ""));
-find1Cases->push_back(new MFunctionCase("f1(#1,#2,#3)", BLANK_TAPE_SYMBOL,
-                                        new vector<string>{"R"}, "f2(#1,#2,#3)"
-                                                                ""));
+vector<string>* find1Rules = new vector<string>();
+find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
+"#3_SYMB" + s_rule_section_delim + s_rule_section_delim + "#1_MC");
 
-vector<MFunctionCase*>* find2Cases = new vector<MFunctionCase*>();
-find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", "#3",
-                                        new vector<string>{}, "#1"));
-find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", "NOT(#3)",
-                                        new vector<string>{"R"}, "f1(#1,#2,#3)"
-                                                                ""));
-find2Cases->push_back(new MFunctionCase("f2(#1,#2,#3)", BLANK_TAPE_SYMBOL,
-                                        new vector<string>{"R"}, "#2"));
+find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
+"NONEMPTY_NOT(#3)" + s_rule_section_delim + "R" + s_rule_section_delim +
+"f1(#1_MC,#2_MC,#3_SYMB)");
 
+find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
+BLANK_TAPE_SYMBOL + s_rule_section_delim + "R" + s_rule_section_delim +
+"f2(#1_MC,#2_MC,#3_SYMB)");
+
+vector<string>* find2Cases = new vector<string>();
+find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
+    "#3_SYMB" + s_rule_section_delim + s_rule_section_delim + "#1_MC");
+
+find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
+    "NOT(#3_SYMB)" + s_rule_section_delim + "R" + s_rule_section_delim +
+    "f1(#1_MC,#2_MC,#3_SYMB)");
+
+find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
+    BLANK_TAPE_SYMBOL + s_rule_section_delim + "R" + s_rule_section_delim +
+    "#2_MC");
+
+MConfig* INIT_MC = new MConfig("MC");
 MConfig* DID_FIND = new MConfig("DF");
 MConfig* DID_NOT_FIND = new MConfig("DNF");
-MFunction* f = new MFunction("f", new vector<MFunction::MFunctionVar*>(), findCases);
-MFunction* f1 = new MFunction("f1", new vector<MFunction::MFunctionVar*>(), find1Cases);
-MFunction* f2 = new MFunction("f2", new vector<MFunction::MFunctionVar*>(), find2Cases);
-vector<string> finalTape = customUTMExecute(new vector<MFunction>{f, f1, f2},
-                              findInitialTape, 10);
+MFunction* f = new MFunction("f(#1_MC,#2_MC,#3_SYMB)", findRules);
+MFunction* f1 = new MFunction("f1(#1_MC,#2_MC,#3_SYMB)", find1Rules);
+MFunction* f2 = new MFunction("f2(#1_MC,#2_MC,#3_SYMB)", find2Cases);
+vector<MFunction*>* findFunctions = new vector<MFunction*> {f, f1, f2};
+TuringMachineWithFunctions* testFindTM = new TuringMachineWithFunctions
+        (&findInitialTape, new vector<MConfig *>{INIT_MC, DID_FIND,
+                                                DID_NOT_FIND},
+         findFunctions);
+//testFindTM->run(50L);
+
 
 // pcal = 'Print Character As Last'
-vector<MFunctionCase*>* pcalCases = new vector<MFunctionCase*>();
-
-vector<string> pcalInitialTape(10);
-fill(pcalInitialTape.begin(),
-     pcalInitialTape.end(), BLANK_TAPE_SYMBOL);
+//vector<string>* pcalCases = new vector<string>();
+//
+//vector<string> pcalInitialTape(10);
+//fill(pcalInitialTape.begin(),
+//     pcalInitialTape.end(), BLANK_TAPE_SYMBOL);
 
 // Prints supplied char on the leftmost empty F-square
 //MFunction* printCharAsLast = new MFunction("printCharAsLast", new
@@ -647,7 +690,7 @@ fill(pcalInitialTape.begin(),
     // Alternately I could just expand my mfunctions for the UTM
     // Should be fine, unless the overall number of rules
     // becomes gigantic. I will try tomorrow. Low energy at the moment.
-//    UniversalTuringMachine universalTM(universalTMInitialTape,
+//    TuringMachineWithFunctions universalTM(universalTMInitialTape,
 //                                       vector<string>{"f", "f1", "f2"},
 //                                       vector<string>{
                                                // Find
