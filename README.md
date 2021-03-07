@@ -9,8 +9,7 @@ The following instructions assume you have cloned the repo and have installed
 the ccmake ncurses-based GUI for cmake.
 - `cd <path_to_cloned_repo>/src`  
 - `ccmake .`
-- I chose `Release` for the CMAKE_BUILD_TYPE in the ccmake gui, recommend 
-  you do that too, then type `c`, then `g` on your keyboard.
+- `Release` for the CMAKE_BUILD_TYPE in the ccmake gui then type `c`, then `g` on your keyboard.
 - `make turingTest`
 - `./turingTest`
 - This will print (to `stdout`) the final tape states for various simple TMs 
