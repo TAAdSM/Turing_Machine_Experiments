@@ -7,7 +7,7 @@ Coding done by Teo Asinari
 The main source file is currently src/main.cpp.
 The following instructions assume you have cloned the repo and have installed 
 the ccmake ncurses-based GUI for cmake.
-- `cd <path_to_cloned_repo>`  
+- `cd <path_to_cloned_repo>/src`  
 - `ccmake .`
 - I chose `Release` for the CMAKE_BUILD_TYPE in the ccmake gui, recommend 
   you do that too, then type `c`, then `g` on your keyboard.
