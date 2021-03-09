@@ -271,6 +271,11 @@ enum MfunctionVarType {
 };
 
 class MFunctionVar {
+public:
+    MFunctionVar(MfunctionVarType type, const string &value) : type(type),
+                                                               value(value) {}
+
+private:
     MfunctionVarType type;
 public:
     string value;
@@ -301,14 +306,21 @@ public:
         currVars = newVars;
     }
 
-    vector<MFunctionVar *> * reorderVars(string newMConfigName,
-                                         vector<MFunctionVar *> * currVars) {
-        vector<MFunctionVar *> * result = new vector<MFunctionVar *>();
+    vector<MFunctionVar *> *reorderVars(string newMConfigName,
+                                        vector<MFunctionVar *> *currVars) {
+        vector<MFunctionVar *> *result = new vector<MFunctionVar *>();
         vector<string> vars = splitString(newMConfigName.substr
-                (newMConfigName.find_first_of('(', 0),
-                 newMConfigName.find_first_of(')', 0)), ',');
-        for (int i=0; i < vars.size(); i++) {
-            result->push_back((*currVars)[atoi(&vars[i][1]) - 1]);
+                (newMConfigName.find_first_of('(', 0) + 1,
+                 newMConfigName.find_first_of(')', 0) - 1), ',');
+        for (int i = 0; i < vars.size(); i++) {
+            int newVarIndex = atoi(&vars[i][1]);
+            cout << "vars[i] is: " + vars[i] + " \n";
+            cout << "newVarIndex is: " + to_string(newVarIndex) + " \n";
+            cout << "GOT HERE\n";
+            cout << "(*currVars)[newVarIndex - 1] is:" + (*currVars)
+            [newVarIndex - 1]->value + " \n";
+            result->push_back((*currVars)[newVarIndex - 1]);
+            cout << "GOT HERE2\n";
         }
         return result;
     }
@@ -422,7 +434,8 @@ class TuringMachineWithFunctions {
     long int numIterationsRun = 0L;
     vector<string> *tape;
     int currTapeIdx = 0;
-    vector<MFunctionVar *> *currentMFunctionVars;
+    vector<MFunctionVar *> *currMFunctionVars = new vector<MFunctionVar *>
+            ();
     vector<MFunction *> *functionObjects;
     vector<MConfig *> *mconfigs;
     MFunction currFunction = DUMMY_MFUNCTION;
@@ -449,7 +462,7 @@ class TuringMachineWithFunctions {
     }
 
     void performExecutionCycle() {
-        currFunction.setVars(currentMFunctionVars);
+        currFunction.setVars(currMFunctionVars);
         MFunctionResult *result = currFunction.evaluateFunction(tape,
                                                                 &currTapeIdx);
         string newFunctionName = result->name;
@@ -457,18 +470,20 @@ class TuringMachineWithFunctions {
         vector<MFunctionVar *> *newVars = result->vars;
         MFunction *newFunction = findAndUpdateFunction(newFunctionName,
                                                        newVars);
-        currentMFunctionVars = newVars;
+        currMFunctionVars = newVars;
         currFunction = *newFunction;
     }
 
 public:
     TuringMachineWithFunctions(vector<string> *newTape,
                                vector<MConfig *> *newMConfigs,
+                               vector<MFunctionVar *> *newMFunctionVars,
                                vector<MFunction *> *newMFunctions) {
         tape = newTape;
         mconfigs = newMConfigs;
         functionObjects = newMFunctions;
         currFunction = *((*functionObjects)[0]);
+        currMFunctionVars = newMFunctionVars;
     };
 
     void run(long int numIterations) {
@@ -485,6 +500,7 @@ public:
 };
 
 int main() {
+    cout << "HELLO THIS IS A TEST";
 //    cout << "simpleTM:\n";
 //    vector<string> simpleTMInitialTape(20);
 //    fill(simpleTMInitialTape.begin(), simpleTMInitialTape.end(),
@@ -745,11 +761,20 @@ int main() {
     MFunction *f2 = new MFunction("f2(#1_MC,#2_MC,#3_SYMB)", find2Cases);
     vector<MFunction *> *findFunctions = new vector<MFunction *>{f, f1, f2};
     TuringMachineWithFunctions *testFindTM = new TuringMachineWithFunctions
-            (&findInitialTape, new vector<MConfig *>{
+            (&findInitialTape,
+             new vector<MConfig *>{
                      INIT_MC, DID_FIND,
                      DID_NOT_FIND},
+             new vector<MFunctionVar *>{
+                     new MFunctionVar(MfunctionVarType::var_enum_mConfig,
+                                      "DF"),
+                     new MFunctionVar
+                             (MfunctionVarType::var_enum_mConfig,
+                              "DNF"),
+                     new MFunctionVar
+                             (MfunctionVarType::var_enum_char, "x")},
              findFunctions);
-testFindTM->run(50L);
+    testFindTM->run(50L);
 
 
 // pcal = 'Print Character As Last'
