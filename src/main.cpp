@@ -38,7 +38,7 @@ static const char OPERATOR_RIGHT = 'R';
 static const char OPERATOR_LEFT = 'L';
 const char *const ruleNotFoundString = "RULE_NOT_FOUND";
 
-static const bool g_debug = false;
+static const bool g_debug = true;
 static const char OPERATION_SUBST_CHAR = '#';
 char rule_section_delim = '|';
 char operation_section_delim = ',';
@@ -314,13 +314,7 @@ public:
                  newMConfigName.find_first_of(')', 0) - 1), ',');
         for (int i = 0; i < vars.size(); i++) {
             int newVarIndex = atoi(&vars[i][1]);
-            cout << "vars[i] is: " + vars[i] + " \n";
-            cout << "newVarIndex is: " + to_string(newVarIndex) + " \n";
-            cout << "GOT HERE\n";
-            cout << "(*currVars)[newVarIndex - 1] is:" + (*currVars)
-            [newVarIndex - 1]->value + " \n";
             result->push_back((*currVars)[newVarIndex - 1]);
-            cout << "GOT HERE2\n";
         }
         return result;
     }
@@ -328,13 +322,14 @@ public:
     MFunctionResult *evaluateFunction(vector<string> *tape, int *currTapeIdx) {
         string foundRule = getRule((*tape)[*currTapeIdx]);
         vector<string> ruleParts = splitString(foundRule, rule_section_delim);
+
         vector<string> operations = splitString(ruleParts[2],
                                                 operation_section_delim);
-        string newMConfigName = ruleParts[3];
-        vector<MFunctionVar *> *newVars = reorderVars(newMConfigName, currVars);
-
         vector<string> substituted_ops = substituteSymbols(operations);
         performOps(substituted_ops, tape, currTapeIdx);
+
+        string newMConfigName = ruleParts[3];
+        vector<MFunctionVar *> *newVars = reorderVars(newMConfigName, currVars);
         return new MFunctionResult(newVars, newMConfigName);
     }
 
@@ -449,29 +444,21 @@ class TuringMachineWithFunctions {
         return DUMMY_MFUNCTION;
     }
 
-    MFunction *
-    findAndUpdateFunction(string newFunctionName, vector<MFunctionVar *>
-    *newFunctionVars) {
-        for (MFunction *functionObj: *functionObjects) {
-            if (functionObj->getName() == newFunctionName) {
-                functionObj->setVars(newFunctionVars);
-                return functionObj;
-            }
-        }
-        return &DUMMY_MFUNCTION;
-    }
-
     void performExecutionCycle() {
+        cout << "GOT HERE\n";
         currFunction.setVars(currMFunctionVars);
+        cout << "GOT HERE2\n";
         MFunctionResult *result = currFunction.evaluateFunction(tape,
                                                                 &currTapeIdx);
+        cout << "GOT HERE3\n";
         string newFunctionName = result->name;
+        cout << "newFunctionName is: " + newFunctionName + " \n";
+        cout << "GOT HERE4\n";
         currFunction = getFunctionByName(newFunctionName);
+        cout << "GOT HERE5\n";
         vector<MFunctionVar *> *newVars = result->vars;
-        MFunction *newFunction = findAndUpdateFunction(newFunctionName,
-                                                       newVars);
-        currMFunctionVars = newVars;
-        currFunction = *newFunction;
+        currFunction.setVars(newVars);
+        cout << "GOT HERE6\n";
     }
 
 public:
@@ -488,8 +475,16 @@ public:
 
     void run(long int numIterations) {
         while (numIterationsRun < numIterations) {
+            cout << "starting cycle: \n";
             performExecutionCycle();
             numIterationsRun++;
+            cout << "currTapeIdx is " + to_string(currTapeIdx) + " \n";
+            cout << "Ran a cycle.\n";
+            cout << "Num iterations run is: " + to_string(numIterationsRun) +
+            " \n";
+            cout << "Num iterations to be run is: " + to_string
+            (numIterations) +
+                    " \n";
         }
         ostringstream implodedTape;
         copy((*tape).begin(), (*tape).end(),
@@ -721,7 +716,7 @@ int main() {
     findRules->push_back("f(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim
                          + "NOT(" + SENTINEL_SCHWA + ")" + s_rule_section_delim
                          + "L" + s_rule_section_delim
-                         + "f(#1_MC,#2_MC,#3)");
+                         + "f(#1_MC,#2_MC,#3_SYMB)");
 
     vector<string> *find1Rules = new vector<string>();
     find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
