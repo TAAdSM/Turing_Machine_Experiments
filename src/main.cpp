@@ -42,13 +42,13 @@ static const bool g_debug = true;
 static const char OPERATION_SUBST_CHAR = '#';
 char rule_section_delim = '|';
 char operation_section_delim = ',';
-string s_rule_section_delim = "|";
 
 vector<int> findLocations(string string, char findIt) {
     vector<int> characterLocations;
-    for (int i = 0; i < string.size(); i++)
-        if (string[i] == findIt)
-            characterLocations.push_back(string[i]);
+    for (char i : string) {
+        if (i == findIt)
+            characterLocations.push_back(i);
+    }
 
     return characterLocations;
 }
@@ -388,6 +388,7 @@ private:
     }
 
     void performOps(vector<string> ops, vector<string> *tape, int *tapeIdx) {
+        cout << "Got into performOps\n";
         for (string operation : ops) {
             if (operation[0] == OPERATOR_PRINT) {
                 if (g_debug) {
@@ -481,9 +482,9 @@ public:
             cout << "currTapeIdx is " + to_string(currTapeIdx) + " \n";
             cout << "Ran a cycle.\n";
             cout << "Num iterations run is: " + to_string(numIterationsRun) +
-            " \n";
+                    " \n";
             cout << "Num iterations to be run is: " + to_string
-            (numIterations) +
+                    (numIterations) +
                     " \n";
         }
         ostringstream implodedTape;
@@ -706,47 +707,31 @@ int main() {
     vector<string> findInitialTape(10);
     fill(findInitialTape.begin(),
          findInitialTape.end(), BLANK_TAPE_SYMBOL);
+    findInitialTape[0] = SENTINEL_SCHWA;
     findInitialTape[5] = "x";
 
     vector<string> *findRules = new vector<string>();
-    findRules->push_back("f(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
-                         SENTINEL_SCHWA + s_rule_section_delim
-                         + "L" + s_rule_section_delim +
-                         "f1(#1_MC,#2_MC,#3_SYMB)");
-    findRules->push_back("f(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim
-                         + "NOT(" + SENTINEL_SCHWA + ")" + s_rule_section_delim
-                         + "L" + s_rule_section_delim
-                         + "f(#1_MC,#2_MC,#3_SYMB)");
+    findRules->push_back(
+            "f(#1_MC,#2_MC,#3_SYMB)|" + SENTINEL_SCHWA + "|L|f1(#1_MC,#2_MC,"
+                                                         "#3_SYMB)");
+    findRules->push_back(
+            "f(#1_MC,#2_MC,#3_SYMB)|NONEMPTY_NOT(" + SENTINEL_SCHWA + ")|L|"
+                                                                      "f(#1_MC,#2_MC,#3_SYMB)");
 
     vector<string> *find1Rules = new vector<string>();
-    find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
-                          "#3_SYMB" + s_rule_section_delim +
-                          s_rule_section_delim + "#1_MC");
-
-    find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
-                          "NONEMPTY_NOT(#3)" + s_rule_section_delim + "R" +
-                          s_rule_section_delim +
-                          "f1(#1_MC,#2_MC,#3_SYMB)");
-
-    find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
-                          BLANK_TAPE_SYMBOL + s_rule_section_delim + "R" +
-                          s_rule_section_delim +
-                          "f2(#1_MC,#2_MC,#3_SYMB)");
+    find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)|#3_SYMB|#1_MC");
+    find1Rules->push_back(
+            "f1(#1_MC,#2_MC,#3_SYMB)|NONEMPTY_NOT(#3_SYMB)|R|f1(#1_MC,#2_MC,#3_SYMB)");
+    find1Rules->push_back(
+            "f1(#1_MC,#2_MC,#3_SYMB)|" + BLANK_TAPE_SYMBOL + "|R|f2(#1_MC,"
+                                                             "#2_MC,#3_SYMB)");
 
     vector<string> *find2Cases = new vector<string>();
-    find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
-                          "#3_SYMB" + s_rule_section_delim +
-                          s_rule_section_delim + "#1_MC");
-
-    find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
-                          "NOT(#3_SYMB)" + s_rule_section_delim + "R" +
-                          s_rule_section_delim +
-                          "f1(#1_MC,#2_MC,#3_SYMB)");
-
-    find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)" + s_rule_section_delim +
-                          BLANK_TAPE_SYMBOL + s_rule_section_delim + "R" +
-                          s_rule_section_delim +
-                          "#2_MC");
+    find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)|#3_SYMB|#1_MC");
+    find2Cases->push_back(
+            "f2(#1_MC,#2_MC,#3_SYMB)|NONEMPTY_NOT(#3_SYMB)|R|f1(#1_MC,#2_MC,#3_SYMB)");
+    find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)|" + BLANK_TAPE_SYMBOL +
+                          "|R|#2_MC");
 
     MConfig *INIT_MC = new MConfig("MC");
     MConfig *DID_FIND = new MConfig("DF");
