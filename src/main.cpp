@@ -346,15 +346,16 @@ private:
         string mConfig = ruleParts[0];
         string symbol = ruleParts[1];
 
-        auto prefixResult = mismatch(rulePrefix.begin(), rulePrefix.end(),
-                                     currCase.begin());
+        auto prefixResult = mismatch(rulePrefix.begin(),
+                                     rulePrefix.end(),
+                                     symbol.begin());
         if (prefixResult.first == rulePrefix.end()) {
             exactMatchResult = currCase;
         }
 
         auto prefixWildcardResult = mismatch(wildcardRulePrefix.begin(),
                                              wildcardRulePrefix.end(),
-                                             currCase.begin());
+                                             symbol.begin());
         if (prefixWildcardResult.first == wildcardRulePrefix.end()) {
             wildcardMatchResult = currCase;
         }
@@ -496,7 +497,6 @@ public:
 };
 
 int main() {
-    cout << "HELLO THIS IS A TEST";
 //    cout << "simpleTM:\n";
 //    vector<string> simpleTMInitialTape(20);
 //    fill(simpleTMInitialTape.begin(), simpleTMInitialTape.end(),
