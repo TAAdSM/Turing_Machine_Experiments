@@ -346,21 +346,33 @@ private:
         string mConfig = ruleParts[0];
         string symbol = ruleParts[1];
 
-        auto prefixResult = mismatch(rulePrefix.begin(),
-                                     rulePrefix.end(),
-                                     symbol.begin());
-        if (prefixResult.first == rulePrefix.end()) {
-            exactMatchResult = currCase;
-        }
+        bool ruleHasOperatorOnSymbol = symbol.find_first_of('(') != string::npos
+                && symbol.find_first_of(')') != string::npos;
 
-        auto prefixWildcardResult = mismatch(wildcardRulePrefix.begin(),
-                                             wildcardRulePrefix.end(),
-                                             symbol.begin());
-        if (prefixWildcardResult.first == wildcardRulePrefix.end()) {
-            wildcardMatchResult = currCase;
-        }
+        if (ruleHasOperatorOnSymbol) {
+            vector<string> symbolParts = splitString(symbol, '(');
+            string operation = symbolParts[0];
+            // Note: currently only supporting unary operators for matching
+            string arg = symbolParts[1];
+            //DUMMY FOR NOW
+            return false;
+        } else {
+            auto prefixResult = mismatch(rulePrefix.begin(),
+                                         rulePrefix.end(),
+                                         symbol.begin());
+            if (prefixResult.first == rulePrefix.end()) {
+                exactMatchResult = currCase;
+            }
 
-        return !exactMatchResult.empty() || !wildcardMatchResult.empty();
+            auto prefixWildcardResult = mismatch(wildcardRulePrefix.begin(),
+                                                 wildcardRulePrefix.end(),
+                                                 symbol.begin());
+            if (prefixWildcardResult.first == wildcardRulePrefix.end()) {
+                wildcardMatchResult = currCase;
+            }
+
+            return !exactMatchResult.empty() || !wildcardMatchResult.empty();
+        }
     }
 
     string getRule(string currTapeSymbol) {
