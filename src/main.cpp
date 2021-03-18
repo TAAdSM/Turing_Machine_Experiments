@@ -40,6 +40,7 @@ const char *const ruleNotFoundString = "RULE_NOT_FOUND";
 
 static const bool g_debug = true;
 static const char OPERATION_SUBST_CHAR = '#';
+static const char *const NONEMPTY_NOT_OPERATOR = "NONEMPTY_NOT";
 char rule_section_delim = '|';
 char operation_section_delim = ',';
 
@@ -275,17 +276,17 @@ public:
     MFunctionVar(MfunctionVarType type, const string &value) : type(type),
                                                                value(value) {}
 
-private:
-    MfunctionVarType type;
 public:
+    MfunctionVarType type;
     string value;
 };
 
 class MFunctionResult {
 public:
-    MFunctionResult(vector<MFunctionVar *> *newVars, const string &name)
-            : vars(newVars), name(name) {}
+    MFunctionResult(MfunctionVarType type, vector<MFunctionVar *> *vars,
+                    const string &name) : type(type), vars(vars), name(name) {}
 
+    MfunctionVarType type;
     vector<MFunctionVar *> *vars;
     string name;
 };
@@ -319,6 +320,13 @@ public:
         return result;
     }
 
+    MfunctionVarType getTypeFromRuleName(string ruleMConfigName) {
+        if (ruleMConfigName.find_first_of('(') != string::npos) {
+            return var_enum_mFunction;
+        }
+        return var_enum_mConfig;
+    }
+
     MFunctionResult *evaluateFunction(vector<string> *tape, int *currTapeIdx) {
         string foundRule = getRule((*tape)[*currTapeIdx]);
         vector<string> ruleParts = splitString(foundRule, rule_section_delim);
@@ -329,8 +337,9 @@ public:
         performOps(substituted_ops, tape, currTapeIdx);
 
         string newMConfigName = ruleParts[3];
+        MfunctionVarType newMConfigType = getTypeFromRuleName(newMConfigName);
         vector<MFunctionVar *> *newVars = reorderVars(newMConfigName, currVars);
-        return new MFunctionResult(newVars, newMConfigName);
+        return new MFunctionResult(newMConfigType, newVars, newMConfigName);
     }
 
 private:
@@ -347,32 +356,68 @@ private:
         string symbol = ruleParts[1];
 
         bool ruleHasOperatorOnSymbol = symbol.find_first_of('(') != string::npos
-                && symbol.find_first_of(')') != string::npos;
+                                       && symbol.find_first_of(')') !=
+                                          string::npos;
 
         if (ruleHasOperatorOnSymbol) {
-            vector<string> symbolParts = splitString(symbol, '(');
-            string operation = symbolParts[0];
-            // Note: currently only supporting unary operators for matching
-            string arg = symbolParts[1];
-            //DUMMY FOR NOW
-            return false;
+            return handleRuleOperator(currTapeSymbol, symbol);
         } else {
+            string searchString;
+            if (symbol.find_first_of('#') != string::npos) {
+                MFunctionVar chosenVar = getFunctionVarFromSubstString(symbol);
+                searchString = chosenVar.value;
+            } else {
+                searchString = symbol;
+            }
+
             auto prefixResult = mismatch(rulePrefix.begin(),
                                          rulePrefix.end(),
-                                         symbol.begin());
+                                         searchString.begin());
             if (prefixResult.first == rulePrefix.end()) {
                 exactMatchResult = currCase;
             }
 
             auto prefixWildcardResult = mismatch(wildcardRulePrefix.begin(),
                                                  wildcardRulePrefix.end(),
-                                                 symbol.begin());
+                                                 searchString.begin());
             if (prefixWildcardResult.first == wildcardRulePrefix.end()) {
                 wildcardMatchResult = currCase;
             }
 
             return !exactMatchResult.empty() || !wildcardMatchResult.empty();
         }
+    }
+
+    bool handleRuleOperator(const string &currTapeSymbol,
+                            const string &symbol) const {
+        const string &symbolWithoutCloseParen = symbol.substr(0,
+                                                              symbol.length() -
+                                                              1);
+        vector<string> symbolParts = splitString(symbolWithoutCloseParen, '(');
+        string operation = symbolParts[0];
+        // Note: only supporting unary operator for now
+        string arg = symbolParts[1];
+
+        if (operation == NONEMPTY_NOT_OPERATOR) {
+            if (arg.find_first_of('#') != string::npos) {
+                MFunctionVar chosenVar = getFunctionVarFromSubstString(arg);
+                return currTapeSymbol != chosenVar.value && currTapeSymbol !=
+                                                            BLANK_TAPE_SYMBOL;
+            }
+            return currTapeSymbol != arg && currTapeSymbol != BLANK_TAPE_SYMBOL;
+        }
+        return false;
+    }
+
+    MFunctionVar getFunctionVarFromSubstString(string substString) const {
+        int argIdx = stoi(
+                substString.substr(1, substString.find_first_of('_')));
+        MFunctionVar chosenVar = *(*currVars)[argIdx - 1];
+        if (chosenVar.type != MfunctionVarType::var_enum_char) {
+            cout << "ERROR, passed chosenVar of type: " + to_string
+                    (chosenVar.type) + "as substitution parameter\n";
+        }
+        return chosenVar;
     }
 
     string getRule(string currTapeSymbol) {
@@ -397,7 +442,7 @@ private:
                 result.push_back(op);
             }
         }
-        return vector<string>{};
+        return result;
     }
 
     void performOps(vector<string> ops, vector<string> *tape, int *tapeIdx) {
@@ -458,21 +503,27 @@ class TuringMachineWithFunctions {
         return DUMMY_MFUNCTION;
     }
 
-    void performExecutionCycle() {
+    int performExecutionCycle() {
         cout << "GOT HERE\n";
         currFunction.setVars(currMFunctionVars);
         cout << "GOT HERE2\n";
         MFunctionResult *result = currFunction.evaluateFunction(tape,
                                                                 &currTapeIdx);
         cout << "GOT HERE3\n";
-        string newFunctionName = result->name;
-        cout << "newFunctionName is: " + newFunctionName + " \n";
-        cout << "GOT HERE4\n";
-        currFunction = getFunctionByName(newFunctionName);
-        cout << "GOT HERE5\n";
-        vector<MFunctionVar *> *newVars = result->vars;
-        currFunction.setVars(newVars);
-        cout << "GOT HERE6\n";
+        if (result->type == MfunctionVarType::var_enum_mFunction) {
+            string newFunctionName = result->name;
+            cout << "newFunctionName is: " + newFunctionName + " \n";
+            cout << "GOT HERE4\n";
+            currFunction = getFunctionByName(newFunctionName);
+            cout << "GOT HERE5\n";
+            vector<MFunctionVar *> *newVars = result->vars;
+            currFunction.setVars(newVars);
+            cout << "GOT HERE6\n";
+            return 0;
+        } else {
+            cout << "Got to Mconfig: " + result->name + ", stopping.\n";
+            return -1;
+        }
     }
 
 public:
@@ -490,7 +541,10 @@ public:
     void run(long int numIterations) {
         while (numIterationsRun < numIterations) {
             cout << "starting cycle: \n";
-            performExecutionCycle();
+            int resultCode = performExecutionCycle();
+            if (resultCode == -1) {
+                break;
+            }
             numIterationsRun++;
             cout << "currTapeIdx is " + to_string(currTapeIdx) + " \n";
             cout << "Ran a cycle.\n";
@@ -720,7 +774,15 @@ int main() {
     fill(findInitialTape.begin(),
          findInitialTape.end(), BLANK_TAPE_SYMBOL);
     findInitialTape[0] = SENTINEL_SCHWA;
-    findInitialTape[5] = "x";
+    findInitialTape[1] = UTM_PRINTABLE_0;
+    findInitialTape[2] = UTM_PRINTABLE_0;
+    findInitialTape[3] = UTM_PRINTABLE_0;
+    findInitialTape[4] = UTM_PRINTABLE_0;
+    findInitialTape[5] = UTM_PRINTABLE_x;
+    findInitialTape[6] = UTM_PRINTABLE_0;
+    findInitialTape[7] = UTM_PRINTABLE_0;
+    findInitialTape[8] = UTM_PRINTABLE_0;
+    findInitialTape[9] = UTM_PRINTABLE_0;
 
     vector<string> *findRules = new vector<string>();
     findRules->push_back(
@@ -766,7 +828,7 @@ int main() {
                      new MFunctionVar
                              (MfunctionVarType::var_enum_char, "x")},
              findFunctions);
-    testFindTM->run(50L);
+    testFindTM->run(12L);
 
 
 // pcal = 'Print Character As Last'
