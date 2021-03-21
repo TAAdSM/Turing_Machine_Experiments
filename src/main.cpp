@@ -793,7 +793,7 @@ int main() {
                                                                       "f(#1_MC,#2_MC,#3_SYMB)");
 
     vector<string> *find1Rules = new vector<string>();
-    find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)|#3_SYMB|#1_MC");
+    find1Rules->push_back("f1(#1_MC,#2_MC,#3_SYMB)|#3_SYMB||#1_MC");
     find1Rules->push_back(
             "f1(#1_MC,#2_MC,#3_SYMB)|NONEMPTY_NOT(#3_SYMB)|R|f1(#1_MC,#2_MC,#3_SYMB)");
     find1Rules->push_back(
@@ -801,7 +801,7 @@ int main() {
                                                              "#2_MC,#3_SYMB)");
 
     vector<string> *find2Cases = new vector<string>();
-    find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)|#3_SYMB|#1_MC");
+    find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)|#3_SYMB||#1_MC");
     find2Cases->push_back(
             "f2(#1_MC,#2_MC,#3_SYMB)|NONEMPTY_NOT(#3_SYMB)|R|f1(#1_MC,#2_MC,#3_SYMB)");
     find2Cases->push_back("f2(#1_MC,#2_MC,#3_SYMB)|" + BLANK_TAPE_SYMBOL +
