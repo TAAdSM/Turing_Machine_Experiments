@@ -50,7 +50,7 @@ static const char *const NONEMPTY_NOT_OPERATOR = "NONEMPTY_NOT";
 char rule_section_delim = '|';
 char operation_section_delim = ',';
 
-vector<int> findLocations(const string& string, char findIt) {
+vector<int> findLocations(const string &string, char findIt) {
     vector<int> characterLocations;
     for (char i : string) {
         if (i == findIt)
@@ -60,12 +60,42 @@ vector<int> findLocations(const string& string, char findIt) {
     return characterLocations;
 }
 
-vector<string> splitString(const string& toSplit, char delim) {
+vector<string> splitString(const string &toSplit, char delim) {
     stringstream sstream(toSplit);
     string item;
     vector<string> splitted;
     while (getline(sstream, item, delim)) {
         splitted.push_back(item);
+    }
+    return splitted;
+}
+
+vector<string> splitOuterCommas(const string &toSplit) {
+    vector<string> splitted;
+    int parenBalance = 0;
+    int lastIdx = 0;
+    for (int idx = 0; idx < toSplit.length(); idx++) {
+        if (idx == toSplit.length() - 1) {
+            if (parenBalance == 0) {
+                splitted.push_back(toSplit.substr(lastIdx, idx - lastIdx + 1));
+                continue;
+            }
+        }
+        if (toSplit[idx] == '(') {
+            parenBalance++;
+        }
+
+        if (toSplit[idx] == ')') {
+            parenBalance--;
+        }
+
+        if (toSplit[idx] == ',') {
+            if (parenBalance != 0) {
+                continue;
+            }
+            splitted.push_back(toSplit.substr(lastIdx, idx - lastIdx));
+            lastIdx = idx + 1;
+        }
     }
     return splitted;
 }
@@ -152,7 +182,7 @@ class TuringMachine {
             }
             vector<string> negatedSymbols = splitString(negatedSymbol, ',');
             bool allSymbolsNegated = true;
-            for (const string& nSymbol : negatedSymbols) {
+            for (const string &nSymbol : negatedSymbols) {
                 if (tape[currTapeIdx] == nSymbol) {
                     allSymbolsNegated = false;
                     break;
@@ -164,7 +194,7 @@ class TuringMachine {
         }
     }
 
-    void parseAndExecuteRule(const string& rule) {
+    void parseAndExecuteRule(const string &rule) {
         vector<string> ruleParts = splitString(rule, rule_section_delim);
         vector<string> operations = splitString(ruleParts[2],
                                                 operation_section_delim);
@@ -316,12 +346,12 @@ public:
     }
 
     static vector<MFunctionVar *> *reorderVars(const string &newMConfigName,
-                                        vector<MFunctionVar *> *currVars) {
+                                               vector<MFunctionVar *> *currVars) {
         auto *result = new vector<MFunctionVar *>();
         vector<string> vars = splitString(newMConfigName.substr
                 (newMConfigName.find_first_of('(', 0) + 1,
                  newMConfigName.find_first_of(')', 0) - 1), ',');
-        for (auto & var : vars) {
+        for (auto &var : vars) {
             int newVarIndex = atoi(&var[1]);
             result->push_back((*currVars)[newVarIndex - 1]);
         }
@@ -431,7 +461,7 @@ private:
 
     string getRule(const string &currTapeSymbol) {
         string currCase;
-        for (auto & rule : *rules) {
+        for (auto &rule : *rules) {
             currCase = rule;
             if (caseMatches(currCase, currTapeSymbol)) {
                 return currCase;
@@ -504,17 +534,46 @@ class TuringMachineWithFunctions {
     MFunction currFunction = DUMMY_MFUNCTION;
 
     MFunction getFunctionByName(const string &basicString) {
-        for (MFunction *function : *functionObjects) {
-            if (equivalentFunctions(basicString, function)) {
-                return *function;
+        for (MFunction *funct : *functionObjects) {
+            if (equivalentFunctions(basicString, funct)) {
+                return *funct;
             }
         }
         return DUMMY_MFUNCTION;
     }
 
+    static string resolveArgType(string arg, int idx) {
+        unsigned long openParenLoc = arg.find('(');
+        if (openParenLoc == string::npos) {
+            return arg;
+        } else {
+            return "#" + to_string(idx) + "_MC";
+        }
+    }
+
+    static string resolveFunctionSignature(string basicString) {
+        unsigned long openParenLoc = basicString.find('(');
+        if (openParenLoc == string::npos) {
+            return "NOT A FUNCTION";
+        }
+        string result = basicString.substr(0, openParenLoc);
+        string argsRest = basicString.substr(openParenLoc + 1, basicString
+                                                                       .length() -
+                                                               3);
+        vector<string> argsSplit = splitOuterCommas(argsRest);
+        for (int idx = 0; idx < argsSplit.size(); idx++) {
+            if (idx == 0) {
+                result = result + resolveArgType(argsSplit[idx], idx);
+            } else {
+                result = result + ", " + resolveArgType(argsSplit[idx], idx);
+            }
+        }
+    }
+
     static bool equivalentFunctions(const string &basicString,
-                                    MFunction *function) {
-        return function->getName() == basicString;
+                                    MFunction *funct) {
+        return resolveFunctionSignature(funct->getName()) ==
+               resolveFunctionSignature(basicString);
     }
 
     int performExecutionCycle() {
@@ -874,10 +933,10 @@ int main() {
         auto *DID_ERASE = new MConfig("DE");
         auto *DID_NOT_ERASE = new MConfig("DNE");
         auto *erase3args = new MFunction("e(#1_MC,#2_MC,#3_SYMB)",
-                                              erase3argsrules);
+                                         erase3argsrules);
         auto *e1 = new MFunction("e1(#1_MC,#2_MC,#3_SYMB)", e1Rules);
         auto *erase2args = new MFunction("e(#1_MC,#2_SYMB)",
-                                              erase2argsrules);
+                                         erase2argsrules);
         auto *eraseFunctions = new vector<MFunction *>{
                 erase3args,
                 e1,
